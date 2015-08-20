@@ -1,0 +1,321 @@
+---
+title: "Tornado hit people, thunderstorms hurt economics"
+author: "Alex Gaggin"
+date: "Friday, August 14, 2015"
+output: html_document
+---
+
+##Synopsis
+
+U.S. National Oceanic and Atmospheric Administration (NOAA)
+tracks and classifies significant weather events in the United States in their
+storm database,
+assessing, in particular, human and dollar damages. The data
+in the dataset was available for years 1950-2011, but for consistency reasons
+a shorter time period was analyzed - 1996-2010. The conclusion appears valid for
+longer period as well: tornadoes were the threat to human life and health even
+before unusually deadly outbreak of 2011.
+From economic damages point of view, tornadoes were not as bad
+as thunderstorms and flash floods.
+
+## Data Processing
+
+```{r, message=FALSE, warning=FALSE}
+# Preload libraries
+library(digest)
+library(dplyr)
+library(lubridate)
+library(ggplot2)
+```
+
+The data was prepared for download by authors of Reproducible Research course on
+the Coursera. It's downloaded and loaded to an R data frame.
+
+```{r, cache=TRUE}
+# setwd(file.path(normalizePath("~"),"Coursera-R","RepData_PeerAssessment2"))
+# Knitr works in the Rmd file directory, so this isn't needed for it, but
+# it can be useful to re-initialize session in console for dev/test/debug
+
+# Download the file - ignore "%2F" imperfection when making a local file name
+remote<-"https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2FStormData.csv.bz2"
+localzip<-basename(remote)
+if(!file.exists(localzip)) download.file(remote,localzip)
+# No need to unzip - read.csv() does it automatically
+
+# For chunk's console usage - no need to reload data if it's loaded and intact
+if(!exists("loaded") || digest(loaded) != "b223723dffbf2ec857526bcc32d2a31d")
+   loaded <- read.csv(localzip)
+# We keep original data frame for console work caching and make a mutable copy
+s<-loaded
+```
+
+Beginning dates of the events are converted to the time class and year part
+is extracted to a separate variable.
+
+```{r, cache=TRUE}
+# Convert beginning dates to date format
+s$BGN_DATE<-mdy_hms(s$BGN_DATE)
+s$Year<-format(s$BGN_DATE,"%Y")
+```
+
+We will consider not just fatalities and property damage, but health damage
+and economic damage overall, so we need to add different types of damages
+together.
+
+```{r, cache=TRUE}
+s$HealthDamage<-s$FATALITIES+s$INJURIES
+s$EconomicDamage<-s$PROPDMG+s$CROPDMG
+```
+
+Event type names seem to duplicate, let's aggregate them.
+
+```{r}
+# After checking unique(s$EVTYPE)
+s$type<-tolower(s$EVTYPE)
+aggr<-function(df,pattern,to)
+        df %>% mutate(type=ifelse(grepl(pattern,type,fixed=FALSE),to,type))
+s<-aggr(s,"tstm","thunderstorm")
+s<-aggr(s,"thunderstorm","thunderstorm")
+
+s<-aggr(s,"wind","wind")
+s<-aggr(s,"wnd","wind")
+
+s<-aggr(s,"slide","debris flow")
+s<-aggr(s,"lands","debris flow")
+
+s<-aggr(s,"nado","tornado")
+s<-aggr(s,"ndao","tornado")
+
+s<-aggr(s,"flash fl","flash")
+
+s<-aggr(s,"flood","flood")
+s<-aggr(s,"fld","flood")
+s<-aggr(s,"high water","flood")
+
+s<-aggr(s,"hail","hail")
+
+s<-aggr(s,"hail","hail")
+
+s<-aggr(s,"spout","spouts")
+
+s<-aggr(s,"cold","cold")
+s<-aggr(s,"frost","cold")
+s<-aggr(s,"freez","cold")
+s<-aggr(s,"low t","cold")
+s<-aggr(s,"hypoth","cold")
+
+s<-aggr(s,"snow","snow")
+
+s<-aggr(s,"lightn","lightning")
+
+s<-aggr(s,"blizz","blizzard")
+
+s<-aggr(s,"rain","rain")
+s<-aggr(s,"shower","rain")
+s<-aggr(s,"prec","rain")
+s<-aggr(s,"wet","rain")
+
+s<-aggr(s,"warm","heat")
+s<-aggr(s,"heat","heat")
+s<-aggr(s,"hot","heat")
+s<-aggr(s,"record high","heat")
+
+s<-aggr(s,"dry","drought")
+s<-aggr(s,"drie","drought")
+s<-aggr(s,"droug","drought")
+
+s<-aggr(s,"tide","tide")
+s<-aggr(s,"surf","tide")
+s<-aggr(s,"wave","tide")
+s<-aggr(s,"coastal surge","tide")
+s<-aggr(s,"high seas","tide")
+
+s<-aggr(s,"volcan","volcano")
+
+s<-aggr(s,"ice","ice")
+s<-aggr(s,"icy","ice")
+
+s<-aggr(s,"winter","winter")
+s<-aggr(s,"wintry","winter")
+
+s<-aggr(s,"fire","fires")
+
+s<-aggr(s,"swell","swells")
+
+s<-aggr(s,"hurr","hurricane")
+s<-aggr(s,"typh","hurricane")
+s<-aggr(s,"tropical","hurricane")
+
+s<-aggr(s,"dust","dust")
+
+s<-aggr(s,"temper","temperature")
+
+s<-aggr(s,"flash","flash flood")
+```
+
+The NOAA Storm Events Database
+[webpage](https://www.ncdc.noaa.gov/stormevents/details.jsp) explains that
+before 1955 the only event type registered was tornado, and then until 1996
+three types of events were recorded - tornado, thunderstorm wind and hail.
+Thus the comparison for event types should start in 1996.
+
+```{r,cache=TRUE}
+recent<-s[s$BGN_DATE>ymd("1996-01-01"),]
+```
+
+What are top 10 event types that caused most life loss and injuries?
+
+```{r}
+deadly10<-tapply(recent$HealthDamage,recent$type,sum) %>%
+        sort(decr=TRUE) %>%
+        head(10) %>%
+        data.frame
+names(deadly10)<-'HealthDamage'
+deadly10$Event<-rownames(deadly10)
+# Order it to prevent gplot from re-sorting bar alphabetically
+deadly10$Event<-factor(deadly10$Event, levels=rev(deadly10$Event))
+print(deadly10, row.names=FALSE)
+```
+
+
+What are top event types that caused most economic damage?
+
+```{r}
+costly10<-tapply(recent$EconomicDamage,recent$type,sum) %>%
+        sort(decr=TRUE) %>%
+        head(10) %>%
+        data.frame
+names(costly10)<-'EconomicDamage'
+costly10$Event<-rownames(costly10)
+costly10$Event<-factor(costly10$Event, levels=rev(costly10$Event))
+print(costly10, row.names=FALSE)
+```
+
+
+Aggregate health damage cost by tornado annually.
+
+```{r}
+Tornado<-recent[recent$type=="tornado",]
+Annual.tornado.health.damage<-with(Tornado, tapply(HealthDamage,Year,sum))
+# Compendate for the missing month in 2011
+Annual.tornado.health.damage["2011"]<-
+        round(Annual.tornado.health.damage["2011"]*12/11)
+Annual.tornado.health.damage
+```
+
+There's an outlier in 2011 (a quick google search shows there was indeed
+a deadliest tornado outbreak in April 2011), let's see damages
+in 1996 - 2010 instead to set the outbreak aside.
+
+```{r,cache=TRUE}
+framed<-recent[recent$BGN_DATE<ymd("2011-01-01"),]
+
+deadly10<-tapply(framed$HealthDamage,framed$type,sum) %>%
+        sort(decr=TRUE) %>%
+        head(10) %>%
+        data.frame
+names(deadly10)<-'HealthDamage'
+deadly10$Event<-rownames(deadly10)
+# Order it to prevent gplot from re-sorting bar alphabetically
+deadly10$Event<-factor(deadly10$Event, levels=rev(deadly10$Event))
+print(deadly10, row.names=FALSE)
+
+costly10<-tapply(framed$EconomicDamage,framed$type,sum) %>%
+        sort(decr=TRUE) %>%
+        head(10) %>%
+        data.frame
+names(costly10)<-'EconomicDamage'
+costly10$Event<-rownames(costly10)
+costly10$Event<-factor(costly10$Event, levels=rev(costly10$Event))
+print(costly10, row.names=FALSE)
+```
+
+It looks like we can operate 1996-2010 year range to draw general conclusions,
+as dropping 2011 doesn't change the event type comparison picture. Before
+1996 the data was focused on tornadoes with thunderstorms added later, so
+we shouldn't expect any possible changes to our conclusions from that data.
+
+While it's unreasonable to expect for life loss to be measured in any units
+other than number of people, for economic damage the scale can be anything.
+Let's figure out what scale the economic damages is in our dataset. To do this,
+let's pick an event and find it in an unprocessed file from NOAA's website.
+
+```{r, cache=TRUE}
+# Pick up some recent event with economic damage and begin latitude
+somedmg<-tail(framed[framed$EconomicDamage>0 & framed$LATITUDE != 0 ,],1)
+
+# Look at its year, latitude, location and property damage
+somedmg %>% select(Year,LATITUDE,BGN_LOCATI,PROPDMG)
+
+# Get unprocessed file with event details for 2010, read it, look at it
+url<-"http://www1.ncdc.noaa.gov/pub/data/swdi/stormevents/csvfiles/StormEvents_details-ftp_v1.0_d2010_c20140824.csv.gz"
+d2010<-basename(url)
+if (!file.exists(d2010)) download.file(url,d2010)
+bit<-read.csv(d2010)
+names(bit)
+
+# Try to match by latitude
+sum(bit$BEGIN_LAT %in% somedmg$LATITUDE)
+
+# Nothing? Try by location
+sum(bit$BEGIN_LOCATION %in% somedmg$BGN_LOCATI)
+
+# There's only one event, let's check it out
+origdmg<-bit[bit$BEGIN_LOCATION %in% somedmg$BGN_LOCATI,]
+
+origdmg %>% select(-EPISODE_NARRATIVE)
+
+somedmg %>% select(-REMARKS)
+
+# Seems to be the same event, not sure why coordinates are a bit different -
+# was there an update to the database since the copy for the task was made
+# by the author of the pre-processed dataset?
+
+# What's the scale of damages?
+origdmg$DAMAGE_PROPERTY
+```
+
+Thus in our dataset property damage is measured in thousands of dollars.
+
+## Results
+
+Tornadoes, supposedly as a result of their rapid nature, are the biggest
+cause of human life loss and injuries. They are far ahead even without
+significant outbreak in 2011.
+
+```{r}
+redplot<-ggplot(data=deadly10,
+          aes(x=Event,y=HealthDamage)
+          )+
+        geom_bar(stat='identity',fill='red')+
+        coord_flip()+
+        ggtitle("Top 10 types of weather events that caused\n biggest loss of human life and health in 1996-2010")+
+        ylab("Number of people killed or injured")+
+        xlab("Event type")
+print(redplot)
+```
+
+
+Damage to property and agriculture is more significant from thunderstorms and
+flash floods - these aren't as deadly, but supposedly hit much larger areas.
+
+```{r}
+# Scale damages to thousands to billions
+greenplot<-ggplot(data=costly10,
+          aes(x=Event,y=EconomicDamage/1000000)
+          )+
+        geom_bar(stat='identity',fill='darkgreen')+
+        coord_flip()+
+        ggtitle("Top 10 types of weather events that caused\n most damage to property and crops in 1996-2010")+
+        ylab("Economic damage, $US billion")+
+        xlab("Event type")
+print(greenplot)
+
+```
+
+<!--
+## To do
+- Check and handle NAs
+- Do a geo check
+- Should I treat outliers? Do they and regular events need different policies?
+-->
