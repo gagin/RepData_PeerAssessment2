@@ -30,8 +30,8 @@ library(lubridate)
 library(ggplot2)
 ```
 
-The data was prepared for download by authors of Reproducible Research course on
-the Coursera. It's downloaded and loaded to an R data frame.
+The data, originally prepared for download by authors of Reproducible Research
+course on the Coursera, was downloaded and loaded to an R data frame.
 
 ```{r, cache=TRUE}
 # setwd(file.path(normalizePath("~"),"Coursera-R","RepData_PeerAssessment2"))
@@ -47,12 +47,13 @@ if(!file.exists(localzip)) download.file(remote,localzip)
 # For chunk's console usage - no need to reload data if it's loaded and intact
 if(!exists("loaded") || digest(loaded) != "b223723dffbf2ec857526bcc32d2a31d")
    loaded <- read.csv(localzip)
-# We keep original data frame for console work caching and make a mutable copy
+# Keep original data frame for console work caching and make a mutable copy
 s<-loaded
+str(s)
 ```
 
-Beginning dates of the events are converted to the time class and year part
-is extracted to a separate variable.
+Beginning dates of the events were converted to the time
+class and year part was extracted to a separate variable.
 
 ```{r, cache=TRUE}
 # Convert beginning dates to date format
@@ -60,381 +61,375 @@ s$BGN_DATE<-mdy_hms(s$BGN_DATE)
 s$Year<-format(s$BGN_DATE,"%Y")
 ```
 
-First, let's deal with PROPDMGEXP and CROPDMGEXP fields. The dataset provided
-for this exercise doesn't include a code book, so to make sure that we
-understand the data properly, and, in particular scale of PROPDMG and CROPDMG
-field, let's load the original dataset files from NOAA website, where,
-according to section 2.7 of their
-[documentation}(https://d396qusza40orc.cloudfront.net/repdata%2Fpeer2_doc%2Fpd01016005curr.pdf),
+The NOAA Storm Events Database
+[webpage](https://www.ncdc.noaa.gov/stormevents/details.jsp) explained
+(see [saved screenshot](https://github.com/gagin/RepData_PeerAssessment2/blob/master/screenshotNOAA20150822.jpg)
+that
+before 1955 the only event type registered was tornado, and then until 1996
+three types of events were recorded - tornado, thunderstorm wind and hail.
+Thus the comparison for event types should start in 1996, so the dataset was
+filtered to include only these events.
+
+```{r,cache=TRUE}
+s<-s[s$BGN_DATE>ymd("1996-01-01"),]
+```
+
+To limit amount of cleaning afterwards, the dataset was reduced to include only
+events that caused fatalities or injuries, or caused property or crops damage.
+
+```{r, cache=TRUE}
+s<-s[s$FATALITIES != 0 | s$INJURIES != 0 | s$PROPDMG != 0 | s$CROPDMG != 0,]
+```
+
+The dataset in review lacks a code book, so investigation was needed to clarify
+meaning of some fields, in particular - PROPDMGEXP and CROPDMGEXP fields. They
+values corresponded to description in section 2.7 of [NOAA's
+documentation}(https://d396qusza40orc.cloudfront.net/repdata%2Fpeer2_doc%2Fpd01016005curr.pdf),
 "Alphabetical characters used to signify magnitude
 include "K" for thousands, "M" for millions, and "B" for billions".
 
 ```{r, cache=TRUE}
-# Let's pick an example event from 2010 and look at it, minus the narrative
+# Consider only values where damage is nonzero and matters
+# Use factor() to drop levels from before subsetting
+# First non-zero property
+prop<-s[s$PROPDMG != 0,]
+prop$PROPDMGEXP<-factor(prop$PROPDMGEXP)
+table(prop$PROPDMGEXP)
+
+# Then non-zero crop
+crop<-s[s$CROPDMG != 0,]
+crop$CROPDMGEXP<-factor(crop$CROPDMGEXP)
+table(crop$CROPDMGEXP)
+```
+
+It was checked by comparing an example from current dataset to to the current
+CSV files on NOAA website that these are indeed the same markers.
+
+```{r, cache=TRUE}
+# Pick an example event from 2010 and look at it, minus the narrative
 # for brevity
-somedmg<-tail(s[s$PROPDMG>0 &
-                             s$LATITUDE != 0 &
-                             s$BGN_DATE<ymd("2011-01-01"),],1)
+somedmg<-tail(prop[prop$PROPDMG>0 &
+                             prop$LATITUDE != 0 &
+                             prop$BGN_DATE<ymd("2011-01-01"),],1)
 somedmg %>% select(-REMARKS)
 
-# Let's get unprocessed file with event details for 2010, read it, look at it
+# Get unprocessed file with event details for 2010, read it, look at it
 url<-"http://www1.ncdc.noaa.gov/pub/data/swdi/stormevents/csvfiles/StormEvents_details-ftp_v1.0_d2010_c20140824.csv.gz"
 d2010<-basename(url)
 if (!file.exists(d2010)) download.file(url,d2010)
 bit2010<-read.csv(d2010)
 names(bit2010)
 
-# Try to match by latitude, using %in% to ignore NAs
-sum(bit2010$BEGIN_LAT %in% somedmg$LATITUDE)
-
-# Nothing? Try by location
+# Match by start location
 sum(bit2010$BEGIN_LOCATION %in% somedmg$BGN_LOCATI)
 
-# There's only one event, let's check it out
-origdmg<-bit[bit2010$BEGIN_LOCATION %in% somedmg$BGN_LOCATI,]
+# There's only one event, check it out
+origdmg<-bit2010[bit2010$BEGIN_LOCATION %in% somedmg$BGN_LOCATI,]
 
 origdmg %>% select(-EPISODE_NARRATIVE)
 
-# Seems to be the same event, not sure why coordinates are a bit different -
-# was there an update to the database since the copy for the task was made
-# by the author of the pre-processed dataset?
+# Seems to be the same event with minor GPS variation, AND "k" was indeed
+# in original damage field
 ```
 
-We see that K in PROPDMGEXP corresponds to K signifier of the damage in the
-original files. What other markers do we have and how many of them?
-*Obviously, we wouldn't reproduce all the following picking at the data, would
-it be a real report, but for purposes of this exercise here it is, in extra
-details, as prescribed.*
-```{r}
-table(s$PROPDMGEXP)
-table(s$CROPDMGEXP)
-```
-
-We can check them "m" in PROPDMGEXP field is the same as M.
-
-```{r}
-somedmg.m<-tail(s[s$PROPDMG>0 &
-                             s$LATITUDE != 0 &
-                             s$BGN_DATE<ymd("2011-01-01") &
-                             s$PROPDMGEXP == "m",],1)
-somedmg.m %>% select(-REMARKS)
-# This one is actually from 1994, and its location is empty
-url<-"http://www1.ncdc.noaa.gov/pub/data/swdi/stormevents/csvfiles/StormEvents_details-ftp_v1.0_d1994_c20140824.csv.gz"
-d1994<-basename(url)
-if (!file.exists(d1994)) download.file(url,d1994)
-bit1994<-read.csv(d1994)
-
-# Is there an event with 1M property damage?
-table(bit1994$DAMAGE_PROPERTY)
-# We have three, let's look at them
-bit1994[bit1994$DAMAGE_PROPERTY=="1M",] %>% select(-EVENT_NARRATIVE)
-# Here's our tornado in Hinds and Rankin on November 27th at 20:40, it matches
-```
-
-The "h" wasn't mentioned in the description, but we assume it's hundreds,
-because it's denoted like this in the original files as well.
-
-```{r}
-somedmg.H<-tail(s[s$PROPDMG>0 &
-                             s$BGN_DATE<ymd("2011-01-01") &
-                             s$PROPDMGEXP == "H",],1)
-somedmg.H %>% select(-REMARKS)
-# Let's get 1995 and look if this event destroyed 500 dollars of property
-url<-"http://www1.ncdc.noaa.gov/pub/data/swdi/stormevents/csvfiles/StormEvents_details-ftp_v1.0_d1995_c20140916.csv.gz"
-d1995<-basename(url)
-if (!file.exists(d1995)) download.file(url,d1995)
-bit1995<-read.csv(d1995)
-
-# Is there an event with 500 property damage?
-table(bit1995$DAMAGE_PROPERTY)
-# Too many too review, try to match county and date
-sum(bit1995$CZ_NAME %in% somedmg.H$COUNTYNAME & 
-        bit1995$BEGIN_YEARMONTH == 199507 & bit1995$BEGIN_DAY == 15)
-# OK, let's see
-bit1995[bit1995$CZ_NAME %in% somedmg.H$COUNTYNAME & 
-        bit1995$BEGIN_YEARMONTH == 199507 & bit1995$BEGIN_DAY == 15,] %>%
-        select(-EVENT_NARRATIVE)
-# Hail that started at Gillette at 18:18 had 5H worth of property damage
-# Well, at least original files have this notation principle declared,
-# so we assume this means hundreds, which is consistent with dismissive tone
-# of the event description
-bit1995[10321,]
-```
-
-Numeric indicators are less obvious. One potential explanation is that
-it means 10^N.
-
-```{r}
-somedmg.4<-tail(s[s$PROPDMG>0 &
-                             s$BGN_DATE<ymd("2011-01-01") &
-                             s$PROPDMGEXP == "4",],1)
-somedmg.4 %>% select(-REMARKS)
-# We got a flooding in Washington, UT on at 16:25 on March 11th, 1995
-sum(bit1995$CZ_NAME %in% somedmg.4$COUNTYNAME & 
-        bit1995$BEGIN_YEARMONTH == 199503 & bit1995$BEGIN_DAY == 11)
-# Really? Let's drop the county.
-sum(bit1995$BEGIN_YEARMONTH == 199503 & bit1995$BEGIN_DAY == 11)
-# OK, here it is - the single event of March 11th
-bit1995[bit1995$BEGIN_YEARMONTH == 199503 & bit1995$BEGIN_DAY == 11,]
-# Huh? Wrong event. Perhaps it was a long flood?
-bit1995[bit1995$CZ_NAME %in% somedmg.4$COUNTYNAME & 
-         bit1995$BEGIN_YEARMONTH == 199503,]
-# Still no floodingin any Washington counties
-# Was there any flooding at all that year?
-sum(base::grepl("floo",bit1995$EVENT_TYPE, ignore.case=TRUE))
-# Four cases, let's review them
-bit1995[base::grepl("floo",bit1995$EVENT_TYPE, ignore.case=TRUE),]
-# Still no events in Utah
-# Let's try match by FIPS numbers
-sum(bit1995$CZ_FIPS == somedmg.4$COUNTY &
-            bit1995$STATE_FIPS == somedmg.4$STATE__)
-# Got three, let's look at them
-bit1995[bit1995$CZ_FIPS == somedmg.4$COUNTY &
-            bit1995$STATE_FIPS == somedmg.4$STATE__,]
-# Wrong ones. Something isn't right here.
-
-
-# Well, let's try some other event.
-somedmg.5<-tail(s[s$PROPDMG>0 &
-                             s$BGN_DATE<ymd("2011-01-01") &
-                             s$PROPDMGEXP == "5",],1)
-somedmg.5
-# We are looking for a flash flood in Rockbridge county, VA, on June 22nd.
-sum(bit1995$CZ_NAME %in% somedmg.5$COUNTYNAME & 
-        bit1995$BEGIN_YEARMONTH == 199506 & bit1995$BEGIN_DAY == 22)
-# Still nothing, perhaps there's a mispelled name, try FIPS
-sum(bit1995$CZ_FIPS == somedmg.5$COUNTY &
-            bit1995$STATE_FIPS == somedmg.5$STATE__ &
-            bit1995$BEGIN_YEARMONTH == 199506 &
-            bit1995$BEGIN_DAY == 22)
-# Nothing, let's try another case
-somedmg.6<-tail(s[s$PROPDMG>0 &
-                             s$BGN_DATE<ymd("2011-01-01") &
-                             s$PROPDMGEXP == "6",],1)
-somedmg.6
-# Thunderstorm in Marion country, IL on May 18th, 1995
-sum(bit1995$CZ_FIPS == somedmg.6$COUNTY &
-            bit1995$STATE_FIPS == somedmg.6$STATE__ &
-            bit1995$BEGIN_YEARMONTH == 199505 &
-            bit1995$BEGIN_DAY == 18)
-# Three, let's review
-bit1995[bit1995$CZ_FIPS == somedmg.6$COUNTY &
-            bit1995$STATE_FIPS == somedmg.6$STATE__ &
-            bit1995$BEGIN_YEARMONTH == 199505 &
-            bit1995$BEGIN_DAY == 18,]
-# Here it is
-bit1995[18635,]
-# So 15 and 6 was actually 156. Did the person who did processing just took
-# last symbol as scale indication? But case for millions in the previous
-# example didn't match.
-# Another try.
-somedmg.7<-tail(s[s$PROPDMG>0 &
-                             s$BGN_DATE<ymd("2011-01-01") &
-                             s$PROPDMGEXP == "7",],1)
-somedmg.7
-# Flash flood in Northampton country, NC on July 4th.
-sum(bit1995$CZ_FIPS == somedmg.7$COUNTY &
-            bit1995$STATE_FIPS == somedmg.7$STATE__ &
-            bit1995$BEGIN_YEARMONTH == 199507 &
-            bit1995$BEGIN_DAY == 04)
-# Single entry
-bit1995[bit1995$CZ_FIPS == somedmg.7$COUNTY &
-            bit1995$STATE_FIPS == somedmg.7$STATE__ &
-            bit1995$BEGIN_YEARMONTH == 199507 &
-            bit1995$BEGIN_DAY == 04,]
-# 15 minutes difference, no property damage in the original
-
-# Let's check smaller scale.
-somedmg.2<-tail(s[s$PROPDMG>0 &
-                             s$BGN_DATE<ymd("2011-01-01") &
-                             s$PROPDMGEXP == "2",],1)
-somedmg.2
-# Thunderstorm in Callaway country, MO on June 8th. Still 1995.
-sum(bit1995$CZ_FIPS == somedmg.2$COUNTY &
-            bit1995$STATE_FIPS == somedmg.2$STATE__ &
-            bit1995$BEGIN_YEARMONTH == 199506 &
-            bit1995$BEGIN_DAY == 08)
-# Two events
-bit1995[bit1995$CZ_FIPS == somedmg.2$COUNTY &
-            bit1995$STATE_FIPS == somedmg.2$STATE__ &
-            bit1995$BEGIN_YEARMONTH == 199506 &
-            bit1995$BEGIN_DAY == 08,]
-# The one at 4:59 did 122 dollars of damage to a mobile home. Again,
-# the last digit was split to EXP field. Not much for "heavily damaged".
-# Perhaps the original file is actually wrong?
-```
-
-It's not 10^n. It appears that numbers in PROPDMGEXP field is a processing
-error and they should be glued to PROPDMG. What about "-", "?", "+" there?
-
-```{r}
-somedmg.minus<-tail(s[s$PROPDMG>0 &
-                             s$BGN_DATE<ymd("2011-01-01") &
-                             s$PROPDMGEXP == "-",],1)
-somedmg.minus
-# High wind in Oregon on December 12th. Still 1995.
-# County is zero.
-sum(bit1995$STATE_FIPS == somedmg.minus$STATE__ &
-            bit1995$BEGIN_YEARMONTH == 199512 &
-            bit1995$BEGIN_DAY == 12)
-# No events in Oregon on December 12th.
-sum(bit1995$STATE_FIPS == somedmg.minus$STATE__ &
-            bit1995$BEGIN_YEARMONTH == 199512)
-# Nothing in all December.
-sum(bit1995$STATE_FIPS == somedmg.minus$STATE__)
-# 39 events in Oregon. Does one lack county?
-bit1995[bit1995$STATE_FIPS == somedmg.minus$STATE__,]$CZ_FIPS
-# No luck. Well, there's just a single minus, let's just ignore it.
-
-somedmg.plus<-tail(s[s$PROPDMG>0 &
-                             s$BGN_DATE<ymd("2011-01-01") &
-                             s$PROPDMGEXP == "+",],1)
-somedmg.plus
-# Tornado in multiple counties in NV, June 5th, 1995.
-sum(bit1995$STATE_FIPS == somedmg.plus$STATE__ &
-            bit1995$BEGIN_YEARMONTH == 199506)
-# Two events.
-bit1995[bit1995$STATE_FIPS == somedmg.plus$STATE__ &
-            bit1995$BEGIN_YEARMONTH == 199506,]
-# Here it is
-bit1995[10449,]
-# Just 60 for described damage doesn't seem right, but it's what in both
-# files, and plus doesn't match anything.
-```
-
-There's was no clear logic in additional symbols, so we'll apply following
-strategy:
-* H for hundred, K for thousand, M for million, B for billion;
-* digits should be glued to base number;
-* other symbols discarded, assuming their smaller share won't affect results
-in a significant way.
+EXP markers were used to have damage variables brought to the same scale
+and added to a new variable.
 
 ```{r}
 unexp<-function(d,exp){
-        if(exp %in% c("h","H"))
-                r<-as.numeric(d)*100
+        if (d == 0)
+                r<-0
         else if (exp %in% c("k","K"))
                 r<-as.numeric(d)*1000
         else if (exp %in% c("m","M"))
                 r<-as.numeric(d)*1000000
         else if (exp %in% c("b","B"))
                 r<-as.numeric(d)*1000000000
-        else if (exp %in% 0:9)
-                r<-as.numeric(paste0(d,exp))
-        else r<-d
+        else print(
+                paste0("d is ",d,", exp is ", exp,", and something is wrong"))
         r}
 
-s$EconomicDamage<-mapply(unexp,s$PROPDMG,s$PROPDMGEXP)+
+s$cost<-mapply(unexp,s$PROPDMG,s$PROPDMGEXP)+
         mapply(unexp,s$CROPDMG,s$CROPDMGEXP)
 ```
 
-For the harm done to humans, let's count affected persons, killed or injured.
+New variable was added to count all affected people - killed or injured.
 
 ```{r, cache=TRUE}
 s$Affected<-s$FATALITIES+s$INJURIES
+# Rename for charting
+s<-rename(s,Fatalities=FATALITIES)
+s<-rename(s,Injuries=INJURIES)
 
 ```
 
-Event type names seem to duplicate, let's aggregate them.
+Event types were checked and found to contain variations of the same
+event type name. Names were unified to have first letters of words in uppercase,
+and "TSTM" was expanded to "Thunderstorm". Notices in parenthesis were dropped,
+and if there were several types separated with slash, only first one was kept.
 
-```{r}
-# After checking unique(s$EVTYPE)
-s$type<-tolower(s$EVTYPE)
+```{r, cache=TRUE}
+# Again, make sure levels are for current subset
+s$EVTYPE<-factor(s$EVTYPE)
+evtype.count<-table(s$EVTYPE)
+evtype.count
+
+# Keep it in separate varible to be safe
+# Take only part before " ("
+s$type<-sapply(as.character(s$EVTYPE),
+               function(x)
+                       unlist(strsplit(x," (",fixed=TRUE))[1])
+
+# Check dropped ones
+unique(s$EVTYPE[!s$EVTYPE %in% s$type])
+
+# Repeat for slash
+s$type<-sapply(as.character(s$type),
+               function(x)
+                       unlist(strsplit(x,"/",fixed=TRUE))[1])
+
+#All good. Convert first letters to uppercase.
+
+# Use modified function from toupper() help page
+.simpleCapDecap <- function(x) {
+    s <- strsplit(x, " ")[[1]]
+    paste(toupper(substring(s, 1, 1)), tolower(substring(s, 2)),
+          sep = "", collapse = " ")
+}
+
+s$type<-sapply(s$type,.simpleCapDecap)
+
+# retype() replaces fixed strings, aggr() replaces if pattern is found
+
+retype<-function(df,from,to)
+        mutate(df,type=ifelse(type==from,to,type))
+
 aggr<-function(df,pattern,to)
-        df %>% mutate(type=ifelse(grepl(pattern,type,fixed=FALSE),to,type))
-s<-aggr(s,"tstm","thunderstorm")
-s<-aggr(s,"thunderstorm","thunderstorm")
+        mutate(df,type=ifelse(grepl(pattern,type,ignore.case=TRUE),to,type))
 
-s<-aggr(s,"wind","wind")
-s<-aggr(s,"wnd","wind")
+s<-aggr(s,"tstm","Thunderstorm")
 
-s<-aggr(s,"slide","debris flow")
-s<-aggr(s,"lands","debris flow")
+type.count<-table(s$type)
+type.count
 
-s<-aggr(s,"nado","tornado")
-s<-aggr(s,"ndao","tornado")
-
-s<-aggr(s,"flash fl","flash")
-
-s<-aggr(s,"flood","flood")
-s<-aggr(s,"fld","flood")
-s<-aggr(s,"high water","flood")
-
-s<-aggr(s,"hail","hail")
-
-s<-aggr(s,"hail","hail")
-
-s<-aggr(s,"spout","spouts")
-
-s<-aggr(s,"cold","cold")
-s<-aggr(s,"frost","cold")
-s<-aggr(s,"freez","cold")
-s<-aggr(s,"low t","cold")
-s<-aggr(s,"hypoth","cold")
-
-s<-aggr(s,"snow","snow")
-
-s<-aggr(s,"lightn","lightning")
-
-s<-aggr(s,"blizz","blizzard")
-
-s<-aggr(s,"rain","rain")
-s<-aggr(s,"shower","rain")
-s<-aggr(s,"prec","rain")
-s<-aggr(s,"wet","rain")
-
-s<-aggr(s,"warm","heat")
-s<-aggr(s,"heat","heat")
-s<-aggr(s,"hot","heat")
-s<-aggr(s,"record high","heat")
-
-s<-aggr(s,"dry","drought")
-s<-aggr(s,"drie","drought")
-s<-aggr(s,"droug","drought")
-
-s<-aggr(s,"tide","tide")
-s<-aggr(s,"surf","tide")
-s<-aggr(s,"wave","tide")
-s<-aggr(s,"coastal surge","tide")
-s<-aggr(s,"high seas","tide")
-
-s<-aggr(s,"volcan","volcano")
-
-s<-aggr(s,"ice","ice")
-s<-aggr(s,"icy","ice")
-
-s<-aggr(s,"winter","winter")
-s<-aggr(s,"wintry","winter")
-
-s<-aggr(s,"fire","fires")
-
-s<-aggr(s,"swell","swells")
-
-s<-aggr(s,"hurr","hurricane")
-s<-aggr(s,"typh","hurricane")
-s<-aggr(s,"tropical","hurricane")
-
-s<-aggr(s,"dust","dust")
-
-s<-aggr(s,"temper","temperature")
-
-s<-aggr(s,"flash","flash flood")
 ```
 
-The NOAA Storm Events Database
-[webpage](https://www.ncdc.noaa.gov/stormevents/details.jsp) explains that
-before 1955 the only event type registered was tornado, and then until 1996
-three types of events were recorded - tornado, thunderstorm wind and hail.
-Thus the comparison for event types should start in 1996.
+[NWS Directive
+10-1605](http://www.ncdc.noaa.gov/stormevents/pd01016005curr.pdf) recognizes
+48 event types. The list was copied to a reference vector. Types with
+alternative names were aggregated, and non-reference
+entries listed.
 
-```{r,cache=TRUE}
-recent<-s[s$BGN_DATE>ymd("1996-01-01"),]
+```{r, cache=TRUE}
+events<-"Astronomical Low Tide Z
+Avalanche Z
+Blizzard Z
+Coastal Flood Z
+Cold/Wind Chill Z
+Debris Flow C
+Dense Fog Z
+Dense Smoke Z
+Drought Z
+Dust Devil C
+Dust Storm Z
+Excessive Heat Z
+Extreme Cold/Wind Chill Z
+Flash Flood C
+Flood C
+Frost/Freeze Z
+Funnel Cloud C
+Freezing Fog Z
+Hail C
+Heat Z
+Heavy Rain C
+Heavy Snow Z
+High Surf Z
+High Wind Z
+Hurricane (Typhoon) Z
+Ice Storm Z
+Lake-Effect Snow Z
+Lakeshore Flood Z
+Lightning C
+Marine Hail M
+Marine High Wind M
+Marine Strong Wind M
+Marine Thunderstorm Wind M
+Rip Current Z
+Seiche Z
+Sleet Z
+Storm Surge/Tide Z
+Strong Wind Z
+Thunderstorm Wind C
+Tornado C
+Tropical Depression Z
+Tropical Storm Z
+Tsunami Z
+Volcanic Ash Z
+Waterspout M
+Wildfire Z
+Winter Storm Z
+Winter Weather"
+# Last Z removed to simplify next action
+events<-unlist(strsplit(events," [CZM]\n", per=TRUE))
+
+s<-retype(s,"Cold","Cold/Wind Chill")
+s<-retype(s,"Wind Chill","Cold/Wind Chill")
+s<-retype(s,"Extreme Cold","Extreme Cold/Wind Chill")
+s<-retype(s,"Frost","Frost/Freeze")
+s<-retype(s,"Freeze","Frost/Freeze")
+s<-retype(s,"Hurricane","Hurricane (Typhoon)")
+s<-retype(s,"Typhoon","Hurricane (Typhoon)")
+s<-retype(s,"Storm Surge","Storm Surge/Tide")
+s<-retype(s,"Tide","Storm Surge/Tide")
+
+# How may of EVTYPE are official? Make uppercase before comparison.
+type.count<-table(s$type)
+irregulars<-type.count[!names(type.count) %in% events]
+irregulars
 ```
-
-What are top 10 event types that caused most life loss and injuries?
+                
+Further replacements were made to make event names adhere to reference. Two
+event types were added - Other and Urban, as there was no obvious replacement
+in the reference list.
 
 ```{r}
-deadly10<-tapply(recent$Affected,recent$type,sum) %>%
+# Update aggr() to ignore already proper strings
+# Remember that ifelse() is vectorized while if() is not
+
+aggr<-function(df,pattern,to)
+        dplyr::mutate(df,
+                      type=ifelse(! type %in% events,
+                                  ifelse(grepl(pattern,type,ignore.case=TRUE),
+                                         to,
+                                         type),
+                                  type))
+
+## Code to test the function:
+# cc<-matrix(c(1,2,3,4),ncol=2)
+# cc<-data.frame(cc)
+# cc$type=c("Winter Weather","Winter")
+# cc
+# aggr(cc,"winter","summer")
+## OK, it works
+
+# Next commented command is for console to automate generating replacement calls
+# for(i in names(irregulars))cat(paste0('s<-retype(s,"',i,'","")\n'))
+# and clean names to replace
+# cat(events,sep="\n")
+# Copy first printout here, use second one for copy-paste
+s<-retype(s,"   High Surf Advisory","High Surf")
+s<-retype(s," Flash Flood","Flash Flood")
+s<-retype(s,"Agricultural Freeze","Frost/Freeze")
+s<-retype(s,"Astronomical High Tide","Storm Surge/Tide")
+s<-retype(s,"Beach Erosion","High Surf")
+s<-retype(s,"Black Ice","Frost/Freeze")
+s<-retype(s,"Blowing Dust","Dust Storm")
+s<-retype(s,"Blowing Snow","Winter Storm")
+s<-retype(s,"Brush Fire","Wildfire")
+s<-retype(s,"Coastal  Flooding","Coastal Flood")
+s<-retype(s,"Coastal Erosion","High Surf")
+s<-retype(s,"Coastal Flooding","Coastal Flood")
+s<-retype(s,"Coastal Storm","Tropical Storm")
+s<-retype(s,"Coastalstorm","Tropical Storm")
+s<-retype(s,"Cold And Snow","Cold/Wind Chill")
+s<-retype(s,"Cold Temperature","Cold/Wind Chill")
+s<-retype(s,"Cold Weather","Cold/Wind Chill")
+s<-retype(s,"Dam Break","Lakeshore Flood")
+s<-retype(s,"Damaging Freeze","Frost/Freeze")
+s<-retype(s,"Downburst","Thunderstorm Wind")
+s<-retype(s,"Drowning","Flood")
+s<-retype(s,"Dry Microburst","Thunderstorm Wind")
+s<-retype(s,"Early Frost","Frost/Freeze")
+s<-retype(s,"Erosion","High Surf")
+s<-retype(s,"Excessive Snow","Winter Weather")
+s<-retype(s,"Extended Cold","Frost/Freeze")
+s<-retype(s,"Extreme Windchill","Extreme Cold/Wind Chill")
+s<-retype(s,"Falling Snow","Winter Weather")
+s<-retype(s,"Fog","Dense Fog")
+s<-retype(s,"Freezing Drizzle","Sleet")
+s<-retype(s,"Freezing Rain","Sleet")
+s<-retype(s,"Freezing Spray","Sleet")
+s<-retype(s,"Glaze","Winter Weather")
+s<-retype(s,"Gradient Wind","Strong Wind")
+s<-retype(s,"Gusty Wind","Strong Wind")
+s<-retype(s,"Gusty Winds","Strong Wind")
+s<-retype(s,"Hard Freeze","Frost/Freeze")
+s<-retype(s,"Hazardous Surf","High Surf")
+s<-retype(s,"Heat Wave","Excessive Heat")
+s<-retype(s,"Heavy Seas","Storm Surge/Tide")
+s<-retype(s,"Heavy Snow Shower","Heavy Snow")
+s<-retype(s,"Heavy Surf","High Surf")
+s<-retype(s,"Heavy Surf And Wind","High Surf")
+s<-retype(s,"High Seas","High Surf")
+s<-retype(s,"High Swells","High Surf")
+s<-retype(s,"High Water","High Surf")
+s<-retype(s,"High Winds","Strong Wind")
+s<-retype(s,"Hurricane Edouard","Hurricane (Typhoon)")
+s<-retype(s,"Hyperthermia","Cold/Wind Chill")
+s<-retype(s,"Hypothermia","Cold/Wind Chill")
+s<-retype(s,"Ice Jam Flood","Flood")
+s<-retype(s,"Ice On Road","Frost/Freeze")
+s<-retype(s,"Ice Roads","Frost/Freeze")
+s<-retype(s,"Icy Roads","Frost/Freeze")
+s<-retype(s,"Lake-effect Snow","Heavy Snow")
+s<-retype(s,"Lake Effect Snow","Heavy Snow")
+s<-retype(s,"Landslide","Debris Flow")
+s<-retype(s,"Landslides","Debris Flow")
+s<-retype(s,"Landslump","Debris Flow")
+s<-retype(s,"Landspout","Dust Devil")
+s<-retype(s,"Late Season Snow","Winter Weather")
+s<-retype(s,"Light Freezing Rain","Winter Weather")
+s<-retype(s,"Light Snow","Winter Weather")
+s<-retype(s,"Light Snowfall","Winter Weather")
+s<-retype(s,"Marine Accident","Marine Strong Wind")
+s<-retype(s,"Microburst","Dust Devil")
+s<-retype(s,"Mixed Precip","Heavy Rain")
+s<-retype(s,"Mixed Precipitation","Heavy Rain")
+s<-retype(s,"Mud Slide","Debris Flow")
+s<-retype(s,"Mudslide","Debris Flow")
+s<-retype(s,"Mudslides","Debris Flow")
+s<-retype(s,"Non-severe Wind Damage","Strong Wind")
+#s<-retype(s,"Other","")
+s<-retype(s,"Rain","Heavy Rain")
+s<-retype(s,"Record Heat","Excessive Heat")
+s<-retype(s,"Rip Currents","Rip Current")
+s<-retype(s,"River Flood","Flood")
+s<-retype(s,"River Flooding","Flood")
+s<-retype(s,"Rock Slide","Debris Flow")
+s<-retype(s,"Rogue Wave","Storm Surge/Tide")
+s<-retype(s,"Rough Seas","Marine High Wind")
+s<-retype(s,"Rough Surf","High Surf")
+s<-retype(s,"Small Hail","Hail")
+s<-retype(s,"Snow","Heavy Snow")
+s<-retype(s,"Snow And Ice","Heavy Snow")
+s<-retype(s,"Snow Squall","Heavy Snow")
+s<-retype(s,"Snow Squalls","Heavy Snow")
+s<-retype(s,"Strong Winds","High Wind")
+s<-retype(s,"Thunderstorm","Thunderstorm Wind")
+s<-retype(s,"Tidal Flooding","Coastal Flood")
+s<-retype(s,"Torrential Rainfall","Heavy Rain")
+s<-retype(s,"Unseasonable Cold","Cold/Wind Chill")
+s<-retype(s,"Unseasonably Cold","Cold/Wind Chill")
+s<-retype(s,"Unseasonably Warm","Heat")
+s<-retype(s,"Unseasonal Rain","Heavy Rain")
+#s<-retype(s,"Urban","")
+s<-retype(s,"Warm Weather","Heat")
+s<-retype(s,"Wet Microburst","Thunderstorm Wind")
+s<-retype(s,"Whirlwind","Thunderstorm Wind")
+s<-retype(s,"Wild","Other")
+s<-retype(s,"Wind","High Wind")
+s<-retype(s,"Wind And Wave","Tropical Storm")
+s<-retype(s,"Wind Damage","High Wind")
+s<-retype(s,"Winds","High Wind")
+s<-retype(s,"Winter Weather Mix","Winter Weather")
+s<-retype(s,"Wintry Mix","Winter Weather")
+s$type<-as.factor(s$type)
+```
+
+Top 10 event types that caused most life loss and injuries were selected.
+
+```{r}
+deadly10<-tapply(s$Affected,s$type,sum) %>%
         sort(decr=TRUE) %>%
         head(10) %>%
         data.frame
@@ -446,10 +441,10 @@ print(deadly10, row.names=FALSE)
 ```
 
 
-What are top event types that caused most economic damage?
+Top 10 event types that caused most economic damage were selected.
 
 ```{r}
-costly10<-tapply(recent$EconomicDamage,recent$type,sum) %>%
+costly10<-tapply(s$cost,s$type,sum) %>%
         sort(decr=TRUE) %>%
         head(10) %>%
         data.frame
@@ -460,10 +455,10 @@ print(costly10, row.names=FALSE)
 ```
 
 
-Aggregate health damage cost by tornado annually.
+Numbers of people affected were reviewed annually.
 
 ```{r}
-Tornado<-recent[recent$type=="tornado",]
+Tornado<-s[s$type=="Tornado",]
 Annual.tornado.health.damage<-with(Tornado, tapply(Affected,Year,sum))
 # Compendate for the missing month in 2011
 Annual.tornado.health.damage["2011"]<-
@@ -471,12 +466,12 @@ Annual.tornado.health.damage["2011"]<-
 Annual.tornado.health.damage
 ```
 
-There's an outlier in 2011 (a quick google search shows there was indeed
-a deadliest tornado outbreak in April 2011), let's see damages
+An outlier was found in 2011 and an google search showed there was indeed
+a deadliest tornado outbreak in April 2011, so damages were reviewed
 in 1996 - 2010 instead to set the outbreak aside.
 
 ```{r,cache=TRUE}
-framed<-recent[recent$BGN_DATE<ymd("2011-01-01"),]
+framed<-s[s$BGN_DATE<ymd("2011-01-01"),]
 
 deadly10<-tapply(framed$Affected,framed$type,sum) %>%
         sort(decr=TRUE) %>%
@@ -488,7 +483,7 @@ deadly10$Event<-rownames(deadly10)
 deadly10$Event<-factor(deadly10$Event, levels=rev(deadly10$Event))
 print(deadly10, row.names=FALSE)
 
-costly10<-tapply(framed$EconomicDamage,framed$type,sum) %>%
+costly10<-tapply(framed$cost,framed$type,sum) %>%
         sort(decr=TRUE) %>%
         head(10) %>%
         data.frame
@@ -498,10 +493,8 @@ costly10$Event<-factor(costly10$Event, levels=rev(costly10$Event))
 print(costly10, row.names=FALSE)
 ```
 
-It looks like we can operate 1996-2010 year range to draw general conclusions,
-as dropping 2011 doesn't change the event type comparison picture. Before
-1996 the data was focused on tornadoes with thunderstorms added later, so
-we shouldn't expect any possible changes to our conclusions from that data.
+It was decided to operate 1996-2010 year range to draw general conclusions,
+as dropping 2011 didn't change the event type comparison picture.
 
 ## Results
 
@@ -538,10 +531,3 @@ greenplot<-ggplot(data=costly10,
 print(greenplot)
 
 ```
-
-<!--
-## To do
-- Check and handle NAs
-- Do a geo check
-- Should I treat outliers? Do they and regular events need different policies?
--->
