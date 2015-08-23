@@ -172,7 +172,7 @@ and if there were several types separated with slash, only first one was kept.
 # Again, make sure levels are for current subset
 s$EVTYPE<-factor(s$EVTYPE)
 evtype.count<-table(s$EVTYPE)
-evtype.count
+str(evtype.count)
 
 # Keep it in separate varible to be safe
 # Take only part before " ("
@@ -207,10 +207,10 @@ retype<-function(df,from,to)
 aggr<-function(df,pattern,to)
         mutate(df,type=ifelse(grepl(pattern,type,ignore.case=TRUE),to,type))
 
-s<-aggr(s,"tstm","Thunderstorm")
+s<-aggr(s,"tstm w","Thunderstorm Wind")
 
 type.count<-table(s$type)
-type.count
+str(type.count)
 
 ```
 
@@ -285,7 +285,7 @@ s<-retype(s,"Tide","Storm Surge/Tide")
 # How may of EVTYPE are official? Make uppercase before comparison.
 type.count<-table(s$type)
 irregulars<-type.count[!names(type.count) %in% events]
-irregulars
+str(irregulars)
 ```
                 
 Further replacements were made to make event names adhere to reference. Two
@@ -293,25 +293,6 @@ event types were added - Other and Urban, as there was no obvious replacement
 in the reference list.
 
 ```{r}
-# Update aggr() to ignore already proper strings
-# Remember that ifelse() is vectorized while if() is not
-
-aggr<-function(df,pattern,to)
-        dplyr::mutate(df,
-                      type=ifelse(! type %in% events,
-                                  ifelse(grepl(pattern,type,ignore.case=TRUE),
-                                         to,
-                                         type),
-                                  type))
-
-## Code to test the function:
-# cc<-matrix(c(1,2,3,4),ncol=2)
-# cc<-data.frame(cc)
-# cc$type=c("Winter Weather","Winter")
-# cc
-# aggr(cc,"winter","summer")
-## OK, it works
-
 # Next commented command is for console to automate generating replacement calls
 # for(i in names(irregulars))cat(paste0('s<-retype(s,"',i,'","")\n'))
 # and clean names to replace
@@ -468,7 +449,7 @@ Annual.tornado.health.damage
 
 An outlier was found in 2011 and an google search showed there was indeed
 a deadliest tornado outbreak in April 2011, so damages were reviewed
-in 1996 - 2010 instead to set the outbreak aside.
+in 1996 - 2010 to set the outbreak aside.
 
 ```{r,cache=TRUE}
 framed<-s[s$BGN_DATE<ymd("2011-01-01"),]
@@ -494,7 +475,8 @@ print(costly10, row.names=FALSE)
 ```
 
 It was decided to operate 1996-2010 year range to draw general conclusions,
-as dropping 2011 didn't change the event type comparison picture.
+as dropping 2011 didn't change the event type comparison picture - Tornado
+was still the biggest hazard to people, even before 2011 outbreak.
 
 ## Results
 

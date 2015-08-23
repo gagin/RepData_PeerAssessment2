@@ -78,7 +78,7 @@ library(digest)
 library(dplyr)
 library(lubridate)
 library(ggplot2)</code></pre>
-<p>The data was prepared for download by authors of Reproducible Research course on the Coursera. It’s downloaded and loaded to an R data frame.</p>
+<p>The data, originally prepared for download by authors of Reproducible Research course on the Coursera, was downloaded and loaded to an R data frame.</p>
 <pre class="r"><code># setwd(file.path(normalizePath(&quot;~&quot;),&quot;Coursera-R&quot;,&quot;RepData_PeerAssessment2&quot;))
 # Knitr works in the Rmd file directory, so this isn't needed for it, but
 # it can be useful to re-initialize session in console for dev/test/debug
@@ -92,18 +92,78 @@ if(!file.exists(localzip)) download.file(remote,localzip)
 # For chunk's console usage - no need to reload data if it's loaded and intact
 if(!exists(&quot;loaded&quot;) || digest(loaded) != &quot;b223723dffbf2ec857526bcc32d2a31d&quot;)
    loaded &lt;- read.csv(localzip)
-# We keep original data frame for console work caching and make a mutable copy
-s&lt;-loaded</code></pre>
-<p>Beginning dates of the events are converted to the time class and year part is extracted to a separate variable.</p>
+# Keep original data frame for console work caching and make a mutable copy
+s&lt;-loaded
+str(s)</code></pre>
+<pre><code>## 'data.frame':    902297 obs. of  37 variables:
+##  $ STATE__   : num  1 1 1 1 1 1 1 1 1 1 ...
+##  $ BGN_DATE  : Factor w/ 16335 levels &quot;1/1/1966 0:00:00&quot;,..: 6523 6523 4242 11116 2224 2224 2260 383 3980 3980 ...
+##  $ BGN_TIME  : Factor w/ 3608 levels &quot;00:00:00 AM&quot;,..: 272 287 2705 1683 2584 3186 242 1683 3186 3186 ...
+##  $ TIME_ZONE : Factor w/ 22 levels &quot;ADT&quot;,&quot;AKS&quot;,&quot;AST&quot;,..: 7 7 7 7 7 7 7 7 7 7 ...
+##  $ COUNTY    : num  97 3 57 89 43 77 9 123 125 57 ...
+##  $ COUNTYNAME: Factor w/ 29601 levels &quot;&quot;,&quot;5NM E OF MACKINAC BRIDGE TO PRESQUE ISLE LT MI&quot;,..: 13513 1873 4598 10592 4372 10094 1973 23873 24418 4598 ...
+##  $ STATE     : Factor w/ 72 levels &quot;AK&quot;,&quot;AL&quot;,&quot;AM&quot;,..: 2 2 2 2 2 2 2 2 2 2 ...
+##  $ EVTYPE    : Factor w/ 985 levels &quot;   HIGH SURF ADVISORY&quot;,..: 834 834 834 834 834 834 834 834 834 834 ...
+##  $ BGN_RANGE : num  0 0 0 0 0 0 0 0 0 0 ...
+##  $ BGN_AZI   : Factor w/ 35 levels &quot;&quot;,&quot;  N&quot;,&quot; NW&quot;,..: 1 1 1 1 1 1 1 1 1 1 ...
+##  $ BGN_LOCATI: Factor w/ 54429 levels &quot;&quot;,&quot;- 1 N Albion&quot;,..: 1 1 1 1 1 1 1 1 1 1 ...
+##  $ END_DATE  : Factor w/ 6663 levels &quot;&quot;,&quot;1/1/1993 0:00:00&quot;,..: 1 1 1 1 1 1 1 1 1 1 ...
+##  $ END_TIME  : Factor w/ 3647 levels &quot;&quot;,&quot; 0900CST&quot;,..: 1 1 1 1 1 1 1 1 1 1 ...
+##  $ COUNTY_END: num  0 0 0 0 0 0 0 0 0 0 ...
+##  $ COUNTYENDN: logi  NA NA NA NA NA NA ...
+##  $ END_RANGE : num  0 0 0 0 0 0 0 0 0 0 ...
+##  $ END_AZI   : Factor w/ 24 levels &quot;&quot;,&quot;E&quot;,&quot;ENE&quot;,&quot;ESE&quot;,..: 1 1 1 1 1 1 1 1 1 1 ...
+##  $ END_LOCATI: Factor w/ 34506 levels &quot;&quot;,&quot;- .5 NNW&quot;,..: 1 1 1 1 1 1 1 1 1 1 ...
+##  $ LENGTH    : num  14 2 0.1 0 0 1.5 1.5 0 3.3 2.3 ...
+##  $ WIDTH     : num  100 150 123 100 150 177 33 33 100 100 ...
+##  $ F         : int  3 2 2 2 2 2 2 1 3 3 ...
+##  $ MAG       : num  0 0 0 0 0 0 0 0 0 0 ...
+##  $ FATALITIES: num  0 0 0 0 0 0 0 0 1 0 ...
+##  $ INJURIES  : num  15 0 2 2 2 6 1 0 14 0 ...
+##  $ PROPDMG   : num  25 2.5 25 2.5 2.5 2.5 2.5 2.5 25 25 ...
+##  $ PROPDMGEXP: Factor w/ 19 levels &quot;&quot;,&quot;-&quot;,&quot;?&quot;,&quot;+&quot;,..: 17 17 17 17 17 17 17 17 17 17 ...
+##  $ CROPDMG   : num  0 0 0 0 0 0 0 0 0 0 ...
+##  $ CROPDMGEXP: Factor w/ 9 levels &quot;&quot;,&quot;?&quot;,&quot;0&quot;,&quot;2&quot;,..: 1 1 1 1 1 1 1 1 1 1 ...
+##  $ WFO       : Factor w/ 542 levels &quot;&quot;,&quot; CI&quot;,&quot;$AC&quot;,..: 1 1 1 1 1 1 1 1 1 1 ...
+##  $ STATEOFFIC: Factor w/ 250 levels &quot;&quot;,&quot;ALABAMA, Central&quot;,..: 1 1 1 1 1 1 1 1 1 1 ...
+##  $ ZONENAMES : Factor w/ 25112 levels &quot;&quot;,&quot;                                                                                                                               &quot;| __truncated__,..: 1 1 1 1 1 1 1 1 1 1 ...
+##  $ LATITUDE  : num  3040 3042 3340 3458 3412 ...
+##  $ LONGITUDE : num  8812 8755 8742 8626 8642 ...
+##  $ LATITUDE_E: num  3051 0 0 0 0 ...
+##  $ LONGITUDE_: num  8806 0 0 0 0 ...
+##  $ REMARKS   : Factor w/ 436781 levels &quot;&quot;,&quot;-2 at Deer Park\n&quot;,..: 1 1 1 1 1 1 1 1 1 1 ...
+##  $ REFNUM    : num  1 2 3 4 5 6 7 8 9 10 ...</code></pre>
+<p>Beginning dates of the events were converted to the time class and year part was extracted to a separate variable.</p>
 <pre class="r"><code># Convert beginning dates to date format
 s$BGN_DATE&lt;-mdy_hms(s$BGN_DATE)
 s$Year&lt;-format(s$BGN_DATE,&quot;%Y&quot;)</code></pre>
-<p>First, let’s deal with PROPDMGEXP and CROPDMGEXP fields. The dataset provided for this exercise doesn’t include a code book, so to make sure that we understand the data properly, and, in particular scale of PROPDMG and CROPDMG field, let’s load the original dataset files from NOAA website, where, according to section 2.7 of their [documentation}(<a href="https://d396qusza40orc.cloudfront.net/repdata%2Fpeer2_doc%2Fpd01016005curr.pdf">https://d396qusza40orc.cloudfront.net/repdata%2Fpeer2_doc%2Fpd01016005curr.pdf</a>), “Alphabetical characters used to signify magnitude include”K&quot; for thousands, “M” for millions, and “B” for billions“.</p>
-<pre class="r"><code># Let's pick an example event from 2010 and look at it, minus the narrative
+<p>The NOAA Storm Events Database <a href="https://www.ncdc.noaa.gov/stormevents/details.jsp">webpage</a> explained (see <a href="https://github.com/gagin/RepData_PeerAssessment2/blob/master/screenshotNOAA20150822.jpg">saved screenshot</a> that before 1955 the only event type registered was tornado, and then until 1996 three types of events were recorded - tornado, thunderstorm wind and hail. Thus the comparison for event types should start in 1996, so the dataset was filtered to include only these events.</p>
+<pre class="r"><code>s&lt;-s[s$BGN_DATE&gt;ymd(&quot;1996-01-01&quot;),]</code></pre>
+<p>To limit amount of cleaning afterwards, the dataset was reduced to include only events that caused fatalities or injuries, or caused property or crops damage.</p>
+<pre class="r"><code>s&lt;-s[s$FATALITIES != 0 | s$INJURIES != 0 | s$PROPDMG != 0 | s$CROPDMG != 0,]</code></pre>
+<p>The dataset in review lacks a code book, so investigation was needed to clarify meaning of some fields, in particular - PROPDMGEXP and CROPDMGEXP fields. They values corresponded to description in section 2.7 of [NOAA’s documentation}(<a href="https://d396qusza40orc.cloudfront.net/repdata%2Fpeer2_doc%2Fpd01016005curr.pdf">https://d396qusza40orc.cloudfront.net/repdata%2Fpeer2_doc%2Fpd01016005curr.pdf</a>), “Alphabetical characters used to signify magnitude include”K&quot; for thousands, “M” for millions, and “B” for billions“.</p>
+<pre class="r"><code># Consider only values where damage is nonzero and matters
+# Use factor() to drop levels from before subsetting
+# First non-zero property
+prop&lt;-s[s$PROPDMG != 0,]
+prop$PROPDMGEXP&lt;-factor(prop$PROPDMGEXP)
+table(prop$PROPDMGEXP)</code></pre>
+<pre><code>## 
+##      B      K      M 
+##     32 181869   7363</code></pre>
+<pre class="r"><code># Then non-zero crop
+crop&lt;-s[s$CROPDMG != 0,]
+crop$CROPDMGEXP&lt;-factor(crop$CROPDMGEXP)
+table(crop$CROPDMGEXP)</code></pre>
+<pre><code>## 
+##     B     K     M 
+##     2 16994  1695</code></pre>
+<p>It was checked by comparing an example from current dataset to to the current CSV files on NOAA website that these are indeed the same markers.</p>
+<pre class="r"><code># Pick an example event from 2010 and look at it, minus the narrative
 # for brevity
-somedmg&lt;-tail(s[s$PROPDMG&gt;0 &amp;
-                             s$LATITUDE != 0 &amp;
-                             s$BGN_DATE&lt;ymd(&quot;2011-01-01&quot;),],1)
+somedmg&lt;-tail(prop[prop$PROPDMG&gt;0 &amp;
+                             prop$LATITUDE != 0 &amp;
+                             prop$BGN_DATE&lt;ymd(&quot;2011-01-01&quot;),],1)
 somedmg %&gt;% select(-REMARKS)</code></pre>
 <pre><code>##        STATE__   BGN_DATE    BGN_TIME TIME_ZONE COUNTY COUNTYNAME STATE
 ## 838643      40 2010-12-31 06:01:00 AM       CST      1      ADAIR    OK
@@ -119,7 +179,7 @@ somedmg %&gt;% select(-REMARKS)</code></pre>
 ## 838643                                                                                                                                                                                                         
 ##        LATITUDE LONGITUDE LATITUDE_E LONGITUDE_ REFNUM Year
 ## 838643     3556      9439          0          0 838633 2010</code></pre>
-<pre class="r"><code># Let's get unprocessed file with event details for 2010, read it, look at it
+<pre class="r"><code># Get unprocessed file with event details for 2010, read it, look at it
 url&lt;-&quot;http://www1.ncdc.noaa.gov/pub/data/swdi/stormevents/csvfiles/StormEvents_details-ftp_v1.0_d2010_c20140824.csv.gz&quot;
 d2010&lt;-basename(url)
 if (!file.exists(d2010)) download.file(url,d2010)
@@ -142,14 +202,11 @@ names(bit2010)</code></pre>
 ## [43] &quot;END_AZIMUTH&quot;        &quot;END_LOCATION&quot;       &quot;BEGIN_LAT&quot;         
 ## [46] &quot;BEGIN_LON&quot;          &quot;END_LAT&quot;            &quot;END_LON&quot;           
 ## [49] &quot;EPISODE_NARRATIVE&quot;  &quot;EVENT_NARRATIVE&quot;    &quot;DATA_SOURCE&quot;</code></pre>
-<pre class="r"><code># Try to match by latitude, using %in% to ignore NAs
-sum(bit2010$BEGIN_LAT %in% somedmg$LATITUDE)</code></pre>
-<pre><code>## [1] 0</code></pre>
-<pre class="r"><code># Nothing? Try by location
+<pre class="r"><code># Match by start location
 sum(bit2010$BEGIN_LOCATION %in% somedmg$BGN_LOCATI)</code></pre>
 <pre><code>## [1] 1</code></pre>
-<pre class="r"><code># There's only one event, let's check it out
-origdmg&lt;-bit[bit2010$BEGIN_LOCATION %in% somedmg$BGN_LOCATI,]
+<pre class="r"><code># There's only one event, check it out
+origdmg&lt;-bit2010[bit2010$BEGIN_LOCATION %in% somedmg$BGN_LOCATI,]
 
 origdmg %&gt;% select(-EPISODE_NARRATIVE)</code></pre>
 <pre><code>##       BEGIN_YEARMONTH BEGIN_DAY BEGIN_TIME END_YEARMONTH END_DAY END_TIME
@@ -176,950 +233,264 @@ origdmg %&gt;% select(-EPISODE_NARRATIVE)</code></pre>
 ## 36803 Emergency management reported damage to a mobile home from strong thunderstorm winds.
 ##       DATA_SOURCE
 ## 36803         CSV</code></pre>
-<pre class="r"><code># Seems to be the same event, not sure why coordinates are a bit different -
-# was there an update to the database since the copy for the task was made
-# by the author of the pre-processed dataset?</code></pre>
-<p>We see that K in PROPDMGEXP corresponds to K signifier of the damage in the original files. What other markers do we have and how many of them? <em>Obviously, we wouldn’t reproduce all the following picking at the data, would it be a real report, but for purposes of this exercise here it is, in extra details, as prescribed.</em></p>
-<pre class="r"><code>table(s$PROPDMGEXP)</code></pre>
-<pre><code>## 
-##             -      ?      +      0      1      2      3      4      5 
-## 465934      1      8      5    216     25     13      4      4     28 
-##      6      7      8      B      h      H      K      m      M 
-##      4      5      1     40      1      6 424665      7  11330</code></pre>
-<pre class="r"><code>table(s$CROPDMGEXP)</code></pre>
-<pre><code>## 
-##             ?      0      2      B      k      K      m      M 
-## 618413      7     19      1      9     21 281832      1   1994</code></pre>
-<p>We can check them “m” in PROPDMGEXP field is the same as M.</p>
-<pre class="r"><code>somedmg.m&lt;-tail(s[s$PROPDMG&gt;0 &amp;
-                             s$LATITUDE != 0 &amp;
-                             s$BGN_DATE&lt;ymd(&quot;2011-01-01&quot;) &amp;
-                             s$PROPDMGEXP == &quot;m&quot;,],1)
-somedmg.m %&gt;% select(-REMARKS)</code></pre>
-<pre><code>##        STATE__   BGN_DATE BGN_TIME TIME_ZONE COUNTY       COUNTYNAME STATE
-## 211464      28 1994-11-27     2040       CST     49 HINDS AND RANKIN    MS
-##         EVTYPE BGN_RANGE BGN_AZI BGN_LOCATI END_DATE END_TIME COUNTY_END
-## 211464 TORNADO         0                              2110CST          0
-##        COUNTYENDN END_RANGE END_AZI END_LOCATI LENGTH WIDTH F MAG
-## 211464         NA         0                        20   200 1   0
-##        FATALITIES INJURIES PROPDMG PROPDMGEXP CROPDMG CROPDMGEXP WFO
-## 211464          0        0       1          m       0               
-##        STATEOFFIC ZONENAMES LATITUDE LONGITUDE LATITUDE_E LONGITUDE_
-## 211464                          3224      9014       3226       8956
-##        REFNUM Year
-## 211464 211384 1994</code></pre>
-<pre class="r"><code># This one is actually from 1994, and its location is empty
-url&lt;-&quot;http://www1.ncdc.noaa.gov/pub/data/swdi/stormevents/csvfiles/StormEvents_details-ftp_v1.0_d1994_c20140824.csv.gz&quot;
-d1994&lt;-basename(url)
-if (!file.exists(d1994)) download.file(url,d1994)
-bit1994&lt;-read.csv(d1994)
-
-# Is there an event with 1M property damage?
-table(bit1994$DAMAGE_PROPERTY)</code></pre>
-<pre><code>## 
-## .01M .05K  .1K  .1M  .2K  .2M  .3K  .4M  .50  .5K  .5M  .7K  .9K    0   00 
-##    1  197    1    2    7    4    2    1    1 1278    1    2    1 8820    1 
-##   0K 1.2K 1.3M 1.5K   10 100K  10K 110K 150K  15K   1K   1M 2.5K   20 200K 
-##   21    1    1    1    2    4   18    1    3    5   27    3    1    2    2 
-##  20K 250K  25K   2h   2K   2M    3 3.3K 3.5K   30  30K   3K   40 400K  40K 
-##   11    2    9    1   25    1    1    1    1    1    9   17    1    1    4 
-##   4K  500 500K  50K  50M  550  55K   5K   5M   6K  75K   7K  800   8K   9K 
-##    3    2  560 1564   14    1    1 2862  115    2    3    1    1    1    1</code></pre>
-<pre class="r"><code># We have three, let's look at them
-bit1994[bit1994$DAMAGE_PROPERTY==&quot;1M&quot;,] %&gt;% select(-EVENT_NARRATIVE)</code></pre>
-<pre><code>##      BEGIN_YEARMONTH BEGIN_DAY BEGIN_TIME END_YEARMONTH END_DAY END_TIME
-## 1637          199411        27       2040        199411      27     2110
-## 3745          199409        21       1435        199409      21     1435
-## 4152          199411        27       1730        199411      27     1755
-##      EPISODE_ID EVENT_ID       STATE STATE_FIPS YEAR MONTH_NAME EVENT_TYPE
-## 1637         NA 10331001 MISSISSIPPI         28 1994  November     Tornado
-## 3745         NA 10330697   MINNESOTA         27 1994  September       Hail
-## 4152         NA 10330370 MISSISSIPPI         28 1994  November     Tornado
-##      CZ_TYPE CZ_FIPS            CZ_NAME WFO    BEGIN_DATE_TIME CZ_TIMEZONE
-## 1637       C      49   HINDS AND RANKIN  NA 27-NOV-94 20:40:00         CST
-## 3745       C     145            STEARNS  NA 21-SEP-94 14:35:00         CST
-## 4152       C      99 NESHOBA AND KEMPER  NA 27-NOV-94 17:30:00         CST
-##           END_DATE_TIME INJURIES_DIRECT INJURIES_INDIRECT DEATHS_DIRECT
-## 1637 27-NOV-94 21:10:00               0                 0             0
-## 3745 21-SEP-94 14:35:00               0                 0             0
-## 4152 27-NOV-94 17:55:00               0                 0             0
-##      DEATHS_INDIRECT DAMAGE_PROPERTY DAMAGE_CROPS SOURCE MAGNITUDE
-## 1637               0              1M            0     NA      0.00
-## 3745               0              1M            0     NA      0.75
-## 4152               0              1M            0     NA      0.00
-##      MAGNITUDE_TYPE FLOOD_CAUSE CATEGORY TOR_F_SCALE TOR_LENGTH TOR_WIDTH
-## 1637             NA          NA       NA          F1         20       200
-## 3745             NA          NA       NA                      0         0
-## 4152             NA          NA       NA          F1         16       100
-##      TOR_OTHER_WFO TOR_OTHER_CZ_STATE TOR_OTHER_CZ_FIPS TOR_OTHER_CZ_NAME
-## 1637            NA                 NA                NA                NA
-## 3745            NA                 NA                NA                NA
-## 4152            NA                 NA                NA                NA
-##      BEGIN_RANGE BEGIN_AZIMUTH BEGIN_LOCATION END_RANGE END_AZIMUTH
-## 1637           0                                      0            
-## 3745           0                         Esko         0            
-## 4152           0                                      0            
-##      END_LOCATION BEGIN_LAT BEGIN_LON END_LAT END_LON EPISODE_NARRATIVE
-## 1637                   32.4    -90.23   32.43  -89.93                NA
-## 3745                     NA        NA      NA      NA                NA
-## 4152                   32.6    -89.12   32.77  -88.88                NA
-##      DATA_SOURCE
-## 1637         CSV
-## 3745         CSV
-## 4152         CSV</code></pre>
-<pre class="r"><code># Here's our tornado in Hinds and Rankin on November 27th at 20:40, it matches</code></pre>
-<p>The “h” wasn’t mentioned in the description, but we assume it’s hundreds, because it’s denoted like this in the original files as well.</p>
-<pre class="r"><code>somedmg.H&lt;-tail(s[s$PROPDMG&gt;0 &amp;
-                             s$BGN_DATE&lt;ymd(&quot;2011-01-01&quot;) &amp;
-                             s$PROPDMGEXP == &quot;H&quot;,],1)
-somedmg.H %&gt;% select(-REMARKS)</code></pre>
-<pre><code>##        STATE__   BGN_DATE BGN_TIME TIME_ZONE COUNTY COUNTYNAME STATE
-## 248038      56 1995-07-15     1818       MST      5   CAMPBELL    WY
-##        EVTYPE BGN_RANGE BGN_AZI BGN_LOCATI END_DATE END_TIME COUNTY_END
-## 248038   HAIL         0           Gillette           1824MST          0
-##        COUNTYENDN END_RANGE END_AZI END_LOCATI LENGTH WIDTH  F MAG
-## 248038         NA         0                         0     0 NA   0
-##        FATALITIES INJURIES PROPDMG PROPDMGEXP CROPDMG CROPDMGEXP WFO
-## 248038          0        2       5          H       0               
-##        STATEOFFIC ZONENAMES LATITUDE LONGITUDE LATITUDE_E LONGITUDE_
-## 248038                             0         0          0          0
-##        REFNUM Year
-## 248038 247989 1995</code></pre>
-<pre class="r"><code># Let's get 1995 and look if this event destroyed 500 dollars of property
-url&lt;-&quot;http://www1.ncdc.noaa.gov/pub/data/swdi/stormevents/csvfiles/StormEvents_details-ftp_v1.0_d1995_c20140916.csv.gz&quot;
-d1995&lt;-basename(url)
-if (!file.exists(d1995)) download.file(url,d1995)
-bit1995&lt;-read.csv(d1995)
-
-# Is there an event with 500 property damage?
-table(bit1995$DAMAGE_PROPERTY)</code></pre>
-<pre><code>## 
-##  .01M  .02M  .03M  .05K  .05M  .07M  .08M   .10   .15  .15M   .1K   .1M 
-##    61    22     8    18    21     1     1     1     1     1   140    42 
-##   .25  .25M   .2K   .2M   .3K   .3M  .45M   .4K   .4M   .5K   .5M  .65M 
-##     1     2   101    12    38    11     1    13     4   152    14     2 
-##   .6K   .6M   .70   .7K   .7M   .8K   .9K     0    00    01    02    03 
-##     7     1     1     3     2     5     2 13346     2    23     9     2 
-##    05    07    08    0K     1  1.1M  1.2B  1.2K  1.3K  1.4K  1.4M  1.5K 
-##     9     2     1    44     4     3     1     4     3     4     1    28 
-##  1.5M  1.6M  1.7K  1.8M    10   100  100K   104   105  105K  106K   10K 
-##    15     1     1     1     4    19   105     1     1     1     1   554 
-##   10M  110K   11K   120  120K   122   125  125K   12K   12M  130K  135K 
-##    13     7     3     2     8     1     2    17    29     1     2     2 
-##   13K  140K   145  145K   147   14K    15   150  150K   156   15K   15M 
-##     1     3     1     1     1     4     1     6    30     1   202     3 
-##  160K   16K  170K  175K  180K  185K   18K  195K    1K    1M     2  2.2K 
-##     2     2     3     4     2     1    13     1   719    25     5     1 
-##  2.4K  2.5K  2.5M  2.7K  2.8M    20   200  200K   203  204K   20K   20M 
-##     1    12     6     1     1     6    14    42     1     2   284     8 
-##  210K  220M  225K   22K   23K  240K   246   24K   24M   250  250K   25K 
-##     2     1     1     7     3     1     1     2     1    13    33   152 
-##   25M   266  275K    2H    2K    2M     3  3.2K  3.3K  3.3M  3.4K  3.5K 
-##     1     1     1     1   879    14     7     1     2     1     2     5 
-##  3.5M    30   300  300K  303K   305   30K   30M  325K   32K  330K   34M 
-##     2     1    12    24     1     1   138     1     1     1     1     1 
-##    35   350  350K   35K  375K   37K   38K    3H    3K    3M     4  4.1K 
-##     1     1     8    19     1     1     1     1   375    11     3     1 
-##  4.1M  4.2K  4.3K  4.4K  4.5K  4.6M  4.9M   400  400K   40K   40M   42K 
-##     1     2     1     2     3     1     1     5    10    84     1     2 
-##   430   450  450K   45K  460K  475K    4K    4M     5  5.4K  5.5K    50 
-##     1     2     2    13     1     1   168     3     6     1     3     6 
-##   500  500K   50K   50M  518K   55K   56K    5H    5K    5M     6  6.4K 
-##    56    83   306     6     1    11     1     4  1136    19     5     1 
-##  6.5K  6.6M  6.7K    60   600  600K   60K   60M   62K  630K  650K   65K 
-##     1     1     1     1     2     8    27     1     1     1     3     2 
-##   670    6K    6M     7  7.5K  7.7K   700  700K   70K   750  750K   75K 
-##     1    49     4     1     2     1     6     2    17     9     6    57 
-##   75M    7K    7M     8  8.2K  8.3K  8.5K   800  800K   80K   85K   885 
-##     2    48     1     1     1     1     2     5     3    22     5     1 
-##    8K    8M     9  900K   90K   95K   98K    9K 
-##    78     1     3     1     5     3     1     9</code></pre>
-<pre class="r"><code># Too many too review, try to match county and date
-sum(bit1995$CZ_NAME %in% somedmg.H$COUNTYNAME &amp; 
-        bit1995$BEGIN_YEARMONTH == 199507 &amp; bit1995$BEGIN_DAY == 15)</code></pre>
-<pre><code>## [1] 3</code></pre>
-<pre class="r"><code># OK, let's see
-bit1995[bit1995$CZ_NAME %in% somedmg.H$COUNTYNAME &amp; 
-        bit1995$BEGIN_YEARMONTH == 199507 &amp; bit1995$BEGIN_DAY == 15,] %&gt;%
-        select(-EVENT_NARRATIVE)</code></pre>
-<pre><code>##       BEGIN_YEARMONTH BEGIN_DAY BEGIN_TIME END_YEARMONTH END_DAY END_TIME
-## 10321          199507        15       1818        199507      15     1824
-## 14380          199507        15       1235        199507      15     1250
-## 14381          199507        15       1750        199507      15     1750
-##       EPISODE_ID EVENT_ID   STATE STATE_FIPS YEAR MONTH_NAME EVENT_TYPE
-## 10321         NA 10357118 WYOMING         56 1995  July            Hail
-## 14380         NA 10357116 WYOMING         56 1995  July            Hail
-## 14381         NA 10357117 WYOMING         56 1995  July            Hail
-##       CZ_TYPE CZ_FIPS  CZ_NAME WFO    BEGIN_DATE_TIME CZ_TIMEZONE
-## 10321       C       5 CAMPBELL  NA 15-JUL-95 18:18:00         MST
-## 14380       C       5 CAMPBELL  NA 15-JUL-95 12:35:00         MST
-## 14381       C       5 CAMPBELL  NA 15-JUL-95 17:50:00         MST
-##            END_DATE_TIME INJURIES_DIRECT INJURIES_INDIRECT DEATHS_DIRECT
-## 10321 15-JUL-95 18:24:00               2                 0             0
-## 14380 15-JUL-95 12:50:00               0                 0             0
-## 14381 15-JUL-95 17:50:00               0                 0             0
-##       DEATHS_INDIRECT DAMAGE_PROPERTY DAMAGE_CROPS SOURCE MAGNITUDE
-## 10321               0              5H            0     NA      0.00
-## 14380               0               0            0     NA      0.01
-## 14381               0               0            0     NA      0.00
-##       MAGNITUDE_TYPE FLOOD_CAUSE CATEGORY TOR_F_SCALE TOR_LENGTH TOR_WIDTH
-## 10321             NA          NA       NA                      0         0
-## 14380             NA          NA       NA                      0         0
-## 14381             NA          NA       NA                      0         0
-##       TOR_OTHER_WFO TOR_OTHER_CZ_STATE TOR_OTHER_CZ_FIPS TOR_OTHER_CZ_NAME
-## 10321            NA                 NA                NA                NA
-## 14380            NA                 NA                NA                NA
-## 14381            NA                 NA                NA                NA
-##       BEGIN_RANGE BEGIN_AZIMUTH BEGIN_LOCATION END_RANGE END_AZIMUTH
-## 10321           0                     Gillette         0            
-## 14380           0                      Aladdin         0            
-## 14381           0                      Recluse         0            
-##       END_LOCATION BEGIN_LAT BEGIN_LON END_LAT END_LON EPISODE_NARRATIVE
-## 10321                     NA        NA      NA      NA                NA
-## 14380                     NA        NA      NA      NA                NA
-## 14381                     NA        NA      NA      NA                NA
-##       DATA_SOURCE
-## 10321         CSV
-## 14380         CSV
-## 14381         CSV</code></pre>
-<pre class="r"><code># Hail that started at Gillette at 18:18 had 5H worth of property damage
-# Well, at least original files have this notation principle declared,
-# so we assume this means hundreds, which is consistent with dismissive tone
-# of the event description
-bit1995[10321,]</code></pre>
-<pre><code>##       BEGIN_YEARMONTH BEGIN_DAY BEGIN_TIME END_YEARMONTH END_DAY END_TIME
-## 10321          199507        15       1818        199507      15     1824
-##       EPISODE_ID EVENT_ID   STATE STATE_FIPS YEAR MONTH_NAME EVENT_TYPE
-## 10321         NA 10357118 WYOMING         56 1995  July            Hail
-##       CZ_TYPE CZ_FIPS  CZ_NAME WFO    BEGIN_DATE_TIME CZ_TIMEZONE
-## 10321       C       5 CAMPBELL  NA 15-JUL-95 18:18:00         MST
-##            END_DATE_TIME INJURIES_DIRECT INJURIES_INDIRECT DEATHS_DIRECT
-## 10321 15-JUL-95 18:24:00               2                 0             0
-##       DEATHS_INDIRECT DAMAGE_PROPERTY DAMAGE_CROPS SOURCE MAGNITUDE
-## 10321               0              5H            0     NA         0
-##       MAGNITUDE_TYPE FLOOD_CAUSE CATEGORY TOR_F_SCALE TOR_LENGTH TOR_WIDTH
-## 10321             NA          NA       NA                      0         0
-##       TOR_OTHER_WFO TOR_OTHER_CZ_STATE TOR_OTHER_CZ_FIPS TOR_OTHER_CZ_NAME
-## 10321            NA                 NA                NA                NA
-##       BEGIN_RANGE BEGIN_AZIMUTH BEGIN_LOCATION END_RANGE END_AZIMUTH
-## 10321           0                     Gillette         0            
-##       END_LOCATION BEGIN_LAT BEGIN_LON END_LAT END_LON EPISODE_NARRATIVE
-## 10321                     NA        NA      NA      NA                NA
-##                                                                                                                                                                                                                                                                                                                         EVENT_NARRATIVE
-## 10321 One inch diameter hail fell in Recluse and in Gillette.  The hail damaged trees and gardens in Gillette.  One outdoor booth at a rodeo in Gillette was demolished and some trailers were damaged.  At the same rodeo, 2 people sustained minor injuries due to the hail.  The hail was in drifts 6 to 8 inches deep in Gillette. 
-##       DATA_SOURCE
-## 10321         CSV</code></pre>
-<p>Numeric indicators are less obvious. One potential explanation is that it means 10^N.</p>
-<pre class="r"><code>somedmg.4&lt;-tail(s[s$PROPDMG&gt;0 &amp;
-                             s$BGN_DATE&lt;ymd(&quot;2011-01-01&quot;) &amp;
-                             s$PROPDMGEXP == &quot;4&quot;,],1)
-somedmg.4 %&gt;% select(-REMARKS)</code></pre>
-<pre><code>##        STATE__   BGN_DATE BGN_TIME TIME_ZONE COUNTY COUNTYNAME STATE
-## 243818      49 1995-03-11     1625       MST     53 WASHINGTON    UT
-##          EVTYPE BGN_RANGE BGN_AZI BGN_LOCATI          END_DATE END_TIME
-## 243818 FLOODING         0                    3/12/1995 0:00:00  0600MST
-##        COUNTY_END COUNTYENDN END_RANGE END_AZI END_LOCATI LENGTH WIDTH  F
-## 243818          0         NA         0                         0     0 NA
-##        MAG FATALITIES INJURIES PROPDMG PROPDMGEXP CROPDMG CROPDMGEXP WFO
-## 243818   0          0        0     0.1          4       0               
-##        STATEOFFIC ZONENAMES LATITUDE LONGITUDE LATITUDE_E LONGITUDE_
-## 243818                             0         0          0          0
-##        REFNUM Year
-## 243818 243767 1995</code></pre>
-<pre class="r"><code># We got a flooding in Washington, UT on at 16:25 on March 11th, 1995
-sum(bit1995$CZ_NAME %in% somedmg.4$COUNTYNAME &amp; 
-        bit1995$BEGIN_YEARMONTH == 199503 &amp; bit1995$BEGIN_DAY == 11)</code></pre>
-<pre><code>## [1] 0</code></pre>
-<pre class="r"><code># Really? Let's drop the county.
-sum(bit1995$BEGIN_YEARMONTH == 199503 &amp; bit1995$BEGIN_DAY == 11)</code></pre>
-<pre><code>## [1] 1</code></pre>
-<pre class="r"><code># OK, here it is - the single event of March 11th
-bit1995[bit1995$BEGIN_YEARMONTH == 199503 &amp; bit1995$BEGIN_DAY == 11,]</code></pre>
-<pre><code>##      BEGIN_YEARMONTH BEGIN_DAY BEGIN_TIME END_YEARMONTH END_DAY END_TIME
-## 4546          199503        11       1645        199503      11     1645
-##      EPISODE_ID EVENT_ID  STATE STATE_FIPS YEAR MONTH_NAME EVENT_TYPE
-## 4546         NA 10344262 OREGON         41 1995  March        Tornado
-##      CZ_TYPE CZ_FIPS CZ_NAME WFO    BEGIN_DATE_TIME CZ_TIMEZONE
-## 4546       C      25  HARNEY  NA 11-MAR-95 16:45:00         PST
-##           END_DATE_TIME INJURIES_DIRECT INJURIES_INDIRECT DEATHS_DIRECT
-## 4546 11-MAR-95 16:45:00               0                 0             0
-##      DEATHS_INDIRECT DAMAGE_PROPERTY DAMAGE_CROPS SOURCE MAGNITUDE
-## 4546               0               0            0     NA         0
-##      MAGNITUDE_TYPE FLOOD_CAUSE CATEGORY TOR_F_SCALE TOR_LENGTH TOR_WIDTH
-## 4546             NA          NA       NA          F0        0.1        10
-##      TOR_OTHER_WFO TOR_OTHER_CZ_STATE TOR_OTHER_CZ_FIPS TOR_OTHER_CZ_NAME
-## 4546            NA                 NA                NA                NA
-##      BEGIN_RANGE BEGIN_AZIMUTH    BEGIN_LOCATION END_RANGE END_AZIMUTH
-## 4546           0               Near Happy Valley         0            
-##      END_LOCATION BEGIN_LAT BEGIN_LON END_LAT END_LON EPISODE_NARRATIVE
-## 4546                  43.05   -118.73      NA      NA                NA
-##                                                                                                                              EVENT_NARRATIVE
-## 4546 A small tornado was sighted in east-central Harney County.  The area is very sparsely populated and no other information is available. 
-##      DATA_SOURCE
-## 4546         CSV</code></pre>
-<pre class="r"><code># Huh? Wrong event. Perhaps it was a long flood?
-bit1995[bit1995$CZ_NAME %in% somedmg.4$COUNTYNAME &amp; 
-         bit1995$BEGIN_YEARMONTH == 199503,]</code></pre>
-<pre><code>##       BEGIN_YEARMONTH BEGIN_DAY BEGIN_TIME END_YEARMONTH END_DAY END_TIME
-## 19375          199503         7       1100        199503       7     1100
-## 19376          199503        15       1210        199503      15     1210
-##       EPISODE_ID EVENT_ID     STATE STATE_FIPS YEAR MONTH_NAME
-## 19375         NA 10327377 LOUISIANA         22 1995  March    
-## 19376         NA 10327378 LOUISIANA         22 1995  March    
-##              EVENT_TYPE CZ_TYPE CZ_FIPS    CZ_NAME WFO    BEGIN_DATE_TIME
-## 19375 Thunderstorm Wind       C     117 WASHINGTON  NA 07-MAR-95 11:00:00
-## 19376              Hail       C     117 WASHINGTON  NA 15-MAR-95 12:10:00
-##       CZ_TIMEZONE      END_DATE_TIME INJURIES_DIRECT INJURIES_INDIRECT
-## 19375         CST 07-MAR-95 11:00:00               0                 0
-## 19376         CST 15-MAR-95 12:10:00               0                 0
-##       DEATHS_DIRECT DEATHS_INDIRECT DAMAGE_PROPERTY DAMAGE_CROPS SOURCE
-## 19375             0               0               0            0     NA
-## 19376             0               0               0            0     NA
-##       MAGNITUDE MAGNITUDE_TYPE FLOOD_CAUSE CATEGORY TOR_F_SCALE TOR_LENGTH
-## 19375      0.00             NA          NA       NA                      0
-## 19376      1.75             NA          NA       NA                      0
-##       TOR_WIDTH TOR_OTHER_WFO TOR_OTHER_CZ_STATE TOR_OTHER_CZ_FIPS
-## 19375         0            NA                 NA                NA
-## 19376         0            NA                 NA                NA
-##       TOR_OTHER_CZ_NAME BEGIN_RANGE BEGIN_AZIMUTH    BEGIN_LOCATION
-## 19375                NA           0               Southwest Portion
-## 19376                NA           2             W         Mt Herman
-##       END_RANGE END_AZIMUTH END_LOCATION BEGIN_LAT BEGIN_LON END_LAT
-## 19375         0                                 NA        NA      NA
-## 19376         0                                 NA        NA      NA
-##       END_LON EPISODE_NARRATIVE
-## 19375      NA                NA
-## 19376      NA                NA
-##                                                                    EVENT_NARRATIVE
-## 19375 Trees and power lines were downed in south and west sections of the Parish. 
-## 19376                                 Golf ball size hail reported by the public. 
-##       DATA_SOURCE
-## 19375         CSV
-## 19376         CSV</code></pre>
-<pre class="r"><code># Still no floodingin any Washington counties
-# Was there any flooding at all that year?
-sum(base::grepl(&quot;floo&quot;,bit1995$EVENT_TYPE, ignore.case=TRUE))</code></pre>
-<pre><code>## [1] 4</code></pre>
-<pre class="r"><code># Four cases, let's review them
-bit1995[base::grepl(&quot;floo&quot;,bit1995$EVENT_TYPE, ignore.case=TRUE),]</code></pre>
-<pre><code>##       BEGIN_YEARMONTH BEGIN_DAY BEGIN_TIME END_YEARMONTH END_DAY END_TIME
-## 442            199506         1       1630        199506       1     1910
-## 443            199508         5       1952        199508       5     2100
-## 11179          199504         4       1930        199504       4     1930
-## 11180          199504         4       2030        199504       4     2030
-##       EPISODE_ID EVENT_ID  STATE STATE_FIPS YEAR MONTH_NAME
-## 442           NA 10335845 NEVADA         32 1995  June     
-## 443           NA 10335846 NEVADA         32 1995  August   
-## 11179         NA 10355544  TEXAS         48 1995  April    
-## 11180         NA 10355545  TEXAS         48 1995  April    
-##                           EVENT_TYPE CZ_TYPE CZ_FIPS      CZ_NAME WFO
-## 442                    HAIL FLOODING       C       0 NVZ003 - 004  NA
-## 443   THUNDERSTORM WINDS/FLASH FLOOD       C       0 NVZ003 - 004  NA
-## 11179      THUNDERSTORM WINDS/ FLOOD       C     489      WILLACY  NA
-## 11180      THUNDERSTORM WINDS/ FLOOD       C     489      WILLACY  NA
-##          BEGIN_DATE_TIME CZ_TIMEZONE      END_DATE_TIME INJURIES_DIRECT
-## 442   01-JUN-95 16:30:00         PDT 01-JUN-95 19:10:00               0
-## 443   05-AUG-95 19:52:00         PDT 05-AUG-95 21:00:00               0
-## 11179 04-APR-95 19:30:00         CDT 04-APR-95 19:30:00               0
-## 11180 04-APR-95 20:30:00         CDT 04-APR-95 20:30:00               0
-##       INJURIES_INDIRECT DEATHS_DIRECT DEATHS_INDIRECT DAMAGE_PROPERTY
-## 442                   0             0               0               0
-## 443                   0             0               0               0
-## 11179                 0             0               0             10K
-## 11180                 0             0               0             10K
-##       DAMAGE_CROPS SOURCE MAGNITUDE MAGNITUDE_TYPE FLOOD_CAUSE CATEGORY
-## 442              0     NA         0             NA          NA       NA
-## 443              0     NA         0             NA          NA       NA
-## 11179            0     NA         0             NA          NA       NA
-## 11180          30K     NA         0             NA          NA       NA
-##       TOR_F_SCALE TOR_LENGTH TOR_WIDTH TOR_OTHER_WFO TOR_OTHER_CZ_STATE
-## 442                        0         0            NA                 NA
-## 443                        0         0            NA                 NA
-## 11179                      0         0            NA                 NA
-## 11180                      0         0            NA                 NA
-##       TOR_OTHER_CZ_FIPS TOR_OTHER_CZ_NAME BEGIN_RANGE BEGIN_AZIMUTH
-## 442                  NA                NA           0              
-## 443                  NA                NA           0              
-## 11179                NA                NA           0              
-## 11180                NA                NA           0              
-##              BEGIN_LOCATION END_RANGE END_AZIMUTH        END_LOCATION
-## 442                                 0                                
-## 443   Extreme Western Nevad         0             West Central Nevada
-## 11179          Santa Monica         0                                
-## 11180            Countywide         0                                
-##       BEGIN_LAT BEGIN_LON END_LAT END_LON EPISODE_NARRATIVE
-## 442          NA        NA      NA      NA                NA
-## 443          NA        NA      NA      NA                NA
-## 11179        NA        NA      NA      NA                NA
-## 11180        NA        NA      NA      NA                NA
-##                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 EVENT_NARRATIVE
-## 442   Nevada, West-Central Nevada,Strong thunderstorms developed across the area prompting the issuance of severe thunderstorm and flash flood warnings.  Spotters in southern Douglas and eastern Churchill County reported one-inch-diameter hail.  A windshield on a Navy jet was shattered by three-quarters-inch-diameter hail in Dixie Valley east of Fallon.  Flooding was reported in the Ranchos area south of Gardnerville where an estimated two to three inches of rain fell in a two-hour period. 
-## 443                                                                                                                                                                                                                                                                                                     Thunderstorm winds blew over a fence and a carport at Yerington.  Local street flooding blocked off a couple of roads at Fernley, where several power outages were reported due to frequent lightning. 
-## 11179                                                                                                                                                                                                      Widespread wind and hail (0.50) damage to crops countywide with numerous roads and streets flooded.  Rainfall totals of two to six inches were reported.  Near Santa Monica, power poles were blown down, palm trees were topped, a barn was destroyed, and several autos were washed into a ditch. 
-## 11180                                                                                                                                                                                                      Widespread wind and hail (0.50) damage to crops countywide with numerous roads and streets flooded.  Rainfall totals of two to six inches were reported.  Near Santa Monica, power poles were blown down, palm trees were topped, a barn was destroyed, and several autos were washed into a ditch. 
-##       DATA_SOURCE
-## 442           CSV
-## 443           CSV
-## 11179         CSV
-## 11180         CSV</code></pre>
-<pre class="r"><code># Still no events in Utah
-# Let's try match by FIPS numbers
-sum(bit1995$CZ_FIPS == somedmg.4$COUNTY &amp;
-            bit1995$STATE_FIPS == somedmg.4$STATE__)</code></pre>
-<pre><code>## [1] 3</code></pre>
-<pre class="r"><code># Got three, let's look at them
-bit1995[bit1995$CZ_FIPS == somedmg.4$COUNTY &amp;
-            bit1995$STATE_FIPS == somedmg.4$STATE__,]</code></pre>
-<pre><code>##       BEGIN_YEARMONTH BEGIN_DAY BEGIN_TIME END_YEARMONTH END_DAY END_TIME
-## 9904           199506         1       1710        199506       1     1710
-## 9905           199506        16       1150        199506      16     1150
-## 12074          199506        29       1710        199506      29     1710
-##       EPISODE_ID EVENT_ID STATE STATE_FIPS YEAR MONTH_NAME
-## 9904          NA 10355128  UTAH         49 1995  June     
-## 9905          NA 10355129  UTAH         49 1995  June     
-## 12074         NA 10355130  UTAH         49 1995  June     
-##              EVENT_TYPE CZ_TYPE CZ_FIPS    CZ_NAME WFO    BEGIN_DATE_TIME
-## 9904  Thunderstorm Wind       C      53 WASHINGTON  NA 01-JUN-95 17:10:00
-## 9905  Thunderstorm Wind       C      53 WASHINGTON  NA 16-JUN-95 11:50:00
-## 12074              Hail       C      53 WASHINGTON  NA 29-JUN-95 17:10:00
-##       CZ_TIMEZONE      END_DATE_TIME INJURIES_DIRECT INJURIES_INDIRECT
-## 9904          MST 01-JUN-95 17:10:00               0                 0
-## 9905          MST 16-JUN-95 11:50:00               0                 0
-## 12074         MST 29-JUN-95 17:10:00               0                 0
-##       DEATHS_DIRECT DEATHS_INDIRECT DAMAGE_PROPERTY DAMAGE_CROPS SOURCE
-## 9904              0               0               0            0     NA
-## 9905              0               0               0            0     NA
-## 12074             0               0               0            0     NA
-##       MAGNITUDE MAGNITUDE_TYPE FLOOD_CAUSE CATEGORY TOR_F_SCALE TOR_LENGTH
-## 9904          0             NA          NA       NA                      0
-## 9905         52             NA          NA       NA                      0
-## 12074         1             NA          NA       NA                      0
-##       TOR_WIDTH TOR_OTHER_WFO TOR_OTHER_CZ_STATE TOR_OTHER_CZ_FIPS
-## 9904          0            NA                 NA                NA
-## 9905          0            NA                 NA                NA
-## 12074         0            NA                 NA                NA
-##       TOR_OTHER_CZ_NAME BEGIN_RANGE BEGIN_AZIMUTH BEGIN_LOCATION END_RANGE
-## 9904                 NA           0                  Santa Clara         0
-## 9905                 NA           0                   St. George         0
-## 12074                NA           4             N     Enterprise         0
-##       END_AZIMUTH END_LOCATION BEGIN_LAT BEGIN_LON END_LAT END_LON
-## 9904                                  NA        NA      NA      NA
-## 9905                                  NA        NA      NA      NA
-## 12074                                 NA        NA      NA      NA
-##       EPISODE_NARRATIVE
-## 9904                 NA
-## 9905                 NA
-## 12074                NA
-##                                                                  EVENT_NARRATIVE
-## 9904                                                                            
-## 9905                                                                            
-## 12074 One-inch0diameter hail cracked a car windshield just north of Enterprise. 
-##       DATA_SOURCE
-## 9904          CSV
-## 9905          CSV
-## 12074         CSV</code></pre>
-<pre class="r"><code># Wrong ones. Something isn't right here.
-
-
-# Well, let's try some other event.
-somedmg.5&lt;-tail(s[s$PROPDMG&gt;0 &amp;
-                             s$BGN_DATE&lt;ymd(&quot;2011-01-01&quot;) &amp;
-                             s$PROPDMGEXP == &quot;5&quot;,],1)
-somedmg.5</code></pre>
-<pre><code>##        STATE__   BGN_DATE BGN_TIME TIME_ZONE COUNTY COUNTYNAME STATE
-## 245316      51 1995-06-22     1950       EST    163 ROCKBRIDGE    VA
-##             EVTYPE BGN_RANGE BGN_AZI BGN_LOCATI          END_DATE END_TIME
-## 245316 FLASH FLOOD         0         Countywide 6/23/1995 0:00:00  0200EST
-##        COUNTY_END COUNTYENDN END_RANGE END_AZI END_LOCATI LENGTH WIDTH  F
-## 245316          0         NA         0                         0     0 NA
-##        MAG FATALITIES INJURIES PROPDMG PROPDMGEXP CROPDMG CROPDMGEXP WFO
-## 245316   0          0        0     6.4          5     430          K    
-##        STATEOFFIC ZONENAMES LATITUDE LONGITUDE LATITUDE_E LONGITUDE_
-## 245316                             0         0          0          0
-##        REMARKS REFNUM Year
-## 245316         245304 1995</code></pre>
-<pre class="r"><code># We are looking for a flash flood in Rockbridge county, VA, on June 22nd.
-sum(bit1995$CZ_NAME %in% somedmg.5$COUNTYNAME &amp; 
-        bit1995$BEGIN_YEARMONTH == 199506 &amp; bit1995$BEGIN_DAY == 22)</code></pre>
-<pre><code>## [1] 0</code></pre>
-<pre class="r"><code># Still nothing, perhaps there's a mispelled name, try FIPS
-sum(bit1995$CZ_FIPS == somedmg.5$COUNTY &amp;
-            bit1995$STATE_FIPS == somedmg.5$STATE__ &amp;
-            bit1995$BEGIN_YEARMONTH == 199506 &amp;
-            bit1995$BEGIN_DAY == 22)</code></pre>
-<pre><code>## [1] 0</code></pre>
-<pre class="r"><code># Nothing, let's try another case
-somedmg.6&lt;-tail(s[s$PROPDMG&gt;0 &amp;
-                             s$BGN_DATE&lt;ymd(&quot;2011-01-01&quot;) &amp;
-                             s$PROPDMGEXP == &quot;6&quot;,],1)
-somedmg.6</code></pre>
-<pre><code>##        STATE__   BGN_DATE BGN_TIME TIME_ZONE COUNTY COUNTYNAME STATE
-## 198971      17 1995-05-18     1255       CST    121     MARION    IL
-##                    EVTYPE BGN_RANGE BGN_AZI BGN_LOCATI END_DATE END_TIME
-## 198971 THUNDERSTORM WINDS         3       S      Salem                  
-##        COUNTY_END COUNTYENDN END_RANGE END_AZI END_LOCATI LENGTH WIDTH  F
-## 198971          0         NA         0                         0     0 NA
-##        MAG FATALITIES INJURIES PROPDMG PROPDMGEXP CROPDMG CROPDMGEXP WFO
-## 198971   0          0        0      15          6       0               
-##        STATEOFFIC ZONENAMES LATITUDE LONGITUDE LATITUDE_E LONGITUDE_
-## 198971                             0         0          0          0
-##                                                                                                                                                                                                                                   REMARKS
-## 198971 Numerous trees were snapped off and roofs damaged south of Odin while a mobile home south of Salem was completely destroyed.  Several stores in Centralia also had broken windows and trees were blown down damaging parked cars. 
-##        REFNUM Year
-## 198971 198957 1995</code></pre>
-<pre class="r"><code># Thunderstorm in Marion country, IL on May 18th, 1995
-sum(bit1995$CZ_FIPS == somedmg.6$COUNTY &amp;
-            bit1995$STATE_FIPS == somedmg.6$STATE__ &amp;
-            bit1995$BEGIN_YEARMONTH == 199505 &amp;
-            bit1995$BEGIN_DAY == 18)</code></pre>
-<pre><code>## [1] 3</code></pre>
-<pre class="r"><code># Three, let's review
-bit1995[bit1995$CZ_FIPS == somedmg.6$COUNTY &amp;
-            bit1995$STATE_FIPS == somedmg.6$STATE__ &amp;
-            bit1995$BEGIN_YEARMONTH == 199505 &amp;
-            bit1995$BEGIN_DAY == 18,]</code></pre>
-<pre><code>##       BEGIN_YEARMONTH BEGIN_DAY BEGIN_TIME END_YEARMONTH END_DAY END_TIME
-## 18633          199505        18       1250        199505      18     1250
-## 18634          199505        18       1253        199505      18     1253
-## 18635          199505        18       1255        199505      18     1255
-##       EPISODE_ID EVENT_ID    STATE STATE_FIPS YEAR MONTH_NAME
-## 18633         NA 10322543 ILLINOIS         17 1995  May      
-## 18634         NA 10322544 ILLINOIS         17 1995  May      
-## 18635         NA 10322545 ILLINOIS         17 1995  May      
-##              EVENT_TYPE CZ_TYPE CZ_FIPS CZ_NAME WFO    BEGIN_DATE_TIME
-## 18633 Thunderstorm Wind       C     121  MARION  NA 18-MAY-95 12:50:00
-## 18634 Thunderstorm Wind       C     121  MARION  NA 18-MAY-95 12:53:00
-## 18635 Thunderstorm Wind       C     121  MARION  NA 18-MAY-95 12:55:00
-##       CZ_TIMEZONE      END_DATE_TIME INJURIES_DIRECT INJURIES_INDIRECT
-## 18633         CST 18-MAY-95 12:50:00               0                 0
-## 18634         CST 18-MAY-95 12:53:00               0                 0
-## 18635         CST 18-MAY-95 12:55:00               0                 0
-##       DEATHS_DIRECT DEATHS_INDIRECT DAMAGE_PROPERTY DAMAGE_CROPS SOURCE
-## 18633             0               0            4.1K            0     NA
-## 18634             0               0            3.5K            0     NA
-## 18635             0               0             156            0     NA
-##       MAGNITUDE MAGNITUDE_TYPE FLOOD_CAUSE CATEGORY TOR_F_SCALE TOR_LENGTH
-## 18633         0             NA          NA       NA                      0
-## 18634         0             NA          NA       NA                      0
-## 18635         0             NA          NA       NA                      0
-##       TOR_WIDTH TOR_OTHER_WFO TOR_OTHER_CZ_STATE TOR_OTHER_CZ_FIPS
-## 18633         0            NA                 NA                NA
-## 18634         0            NA                 NA                NA
-## 18635         0            NA                 NA                NA
-##       TOR_OTHER_CZ_NAME BEGIN_RANGE BEGIN_AZIMUTH BEGIN_LOCATION END_RANGE
-## 18633                NA           0                    Centralia         0
-## 18634                NA           1             S           Odin         0
-## 18635                NA           3             S          Salem         0
-##       END_AZIMUTH END_LOCATION BEGIN_LAT BEGIN_LON END_LAT END_LON
-## 18633                                 NA        NA      NA      NA
-## 18634                                 NA        NA      NA      NA
-## 18635                                 NA        NA      NA      NA
-##       EPISODE_NARRATIVE
-## 18633                NA
-## 18634                NA
-## 18635                NA
-##                                                                                                                                                                                                                          EVENT_NARRATIVE
-## 18633 Numerous trees were snapped off and roofs damaged south of Odin while a mobile home south of Salem was completely destroyed.  Several stores in Centralia also had broken windows and trees were blown down damaging parked cars. 
-## 18634 Numerous trees were snapped off and roofs damaged south of Odin while a mobile home south of Salem was completely destroyed.  Several stores in Centralia also had broken windows and trees were blown down damaging parked cars. 
-## 18635 Numerous trees were snapped off and roofs damaged south of Odin while a mobile home south of Salem was completely destroyed.  Several stores in Centralia also had broken windows and trees were blown down damaging parked cars. 
-##       DATA_SOURCE
-## 18633         CSV
-## 18634         CSV
-## 18635         CSV</code></pre>
-<pre class="r"><code># Here it is
-bit1995[18635,]</code></pre>
-<pre><code>##       BEGIN_YEARMONTH BEGIN_DAY BEGIN_TIME END_YEARMONTH END_DAY END_TIME
-## 18635          199505        18       1255        199505      18     1255
-##       EPISODE_ID EVENT_ID    STATE STATE_FIPS YEAR MONTH_NAME
-## 18635         NA 10322545 ILLINOIS         17 1995  May      
-##              EVENT_TYPE CZ_TYPE CZ_FIPS CZ_NAME WFO    BEGIN_DATE_TIME
-## 18635 Thunderstorm Wind       C     121  MARION  NA 18-MAY-95 12:55:00
-##       CZ_TIMEZONE      END_DATE_TIME INJURIES_DIRECT INJURIES_INDIRECT
-## 18635         CST 18-MAY-95 12:55:00               0                 0
-##       DEATHS_DIRECT DEATHS_INDIRECT DAMAGE_PROPERTY DAMAGE_CROPS SOURCE
-## 18635             0               0             156            0     NA
-##       MAGNITUDE MAGNITUDE_TYPE FLOOD_CAUSE CATEGORY TOR_F_SCALE TOR_LENGTH
-## 18635         0             NA          NA       NA                      0
-##       TOR_WIDTH TOR_OTHER_WFO TOR_OTHER_CZ_STATE TOR_OTHER_CZ_FIPS
-## 18635         0            NA                 NA                NA
-##       TOR_OTHER_CZ_NAME BEGIN_RANGE BEGIN_AZIMUTH BEGIN_LOCATION END_RANGE
-## 18635                NA           3             S          Salem         0
-##       END_AZIMUTH END_LOCATION BEGIN_LAT BEGIN_LON END_LAT END_LON
-## 18635                                 NA        NA      NA      NA
-##       EPISODE_NARRATIVE
-## 18635                NA
-##                                                                                                                                                                                                                          EVENT_NARRATIVE
-## 18635 Numerous trees were snapped off and roofs damaged south of Odin while a mobile home south of Salem was completely destroyed.  Several stores in Centralia also had broken windows and trees were blown down damaging parked cars. 
-##       DATA_SOURCE
-## 18635         CSV</code></pre>
-<pre class="r"><code># So 15 and 6 was actually 156. Did the person who did processing just took
-# last symbol as scale indication? But case for millions in the previous
-# example didn't match.
-# Another try.
-somedmg.7&lt;-tail(s[s$PROPDMG&gt;0 &amp;
-                             s$BGN_DATE&lt;ymd(&quot;2011-01-01&quot;) &amp;
-                             s$PROPDMGEXP == &quot;7&quot;,],1)
-somedmg.7</code></pre>
-<pre><code>##        STATE__   BGN_DATE BGN_TIME TIME_ZONE COUNTY  COUNTYNAME STATE
-## 220986      37 1995-07-04     1930       EST    131 NORTHAMPTON    NC
-##             EVTYPE BGN_RANGE BGN_AZI BGN_LOCATI         END_DATE END_TIME
-## 220986 FLASH FLOOD         0             Severn 7/4/1995 0:00:00  2145EST
-##        COUNTY_END COUNTYENDN END_RANGE END_AZI END_LOCATI LENGTH WIDTH  F
-## 220986          0         NA         0                         0     0 NA
-##        MAG FATALITIES INJURIES PROPDMG PROPDMGEXP CROPDMG CROPDMGEXP WFO
-## 220986   0          0        0      68          7       0               
-##        STATEOFFIC ZONENAMES LATITUDE LONGITUDE LATITUDE_E LONGITUDE_
-## 220986                             0         0          0          0
-##                                                                                                                                                                                                                                                                                                                    REMARKS
-## 220986 Up to eight inches of rain in a three hour period caused the worst flash flood ever along the Meherrin River in the town of Severn. Between 15 and 20 residences were damaged significantly by the flood, with water window high in many of these homes. Damage also occurred at the local sewage treatment plant. 
-##        REFNUM Year
-## 220986 220960 1995</code></pre>
-<pre class="r"><code># Flash flood in Northampton country, NC on July 4th.
-sum(bit1995$CZ_FIPS == somedmg.7$COUNTY &amp;
-            bit1995$STATE_FIPS == somedmg.7$STATE__ &amp;
-            bit1995$BEGIN_YEARMONTH == 199507 &amp;
-            bit1995$BEGIN_DAY == 04)</code></pre>
-<pre><code>## [1] 1</code></pre>
-<pre class="r"><code># Single entry
-bit1995[bit1995$CZ_FIPS == somedmg.7$COUNTY &amp;
-            bit1995$STATE_FIPS == somedmg.7$STATE__ &amp;
-            bit1995$BEGIN_YEARMONTH == 199507 &amp;
-            bit1995$BEGIN_DAY == 04,]</code></pre>
-<pre><code>##       BEGIN_YEARMONTH BEGIN_DAY BEGIN_TIME END_YEARMONTH END_DAY END_TIME
-## 10147          199507         4       1915        199507       4     1915
-##       EPISODE_ID EVENT_ID          STATE STATE_FIPS YEAR MONTH_NAME
-## 10147         NA 10337446 NORTH CAROLINA         37 1995  July     
-##              EVENT_TYPE CZ_TYPE CZ_FIPS     CZ_NAME WFO    BEGIN_DATE_TIME
-## 10147 Thunderstorm Wind       C     131 NORTHAMPTON  NA 04-JUL-95 19:15:00
-##       CZ_TIMEZONE      END_DATE_TIME INJURIES_DIRECT INJURIES_INDIRECT
-## 10147         EST 04-JUL-95 19:15:00               0                 0
-##       DEATHS_DIRECT DEATHS_INDIRECT DAMAGE_PROPERTY DAMAGE_CROPS SOURCE
-## 10147             0               0               0            0     NA
-##       MAGNITUDE MAGNITUDE_TYPE FLOOD_CAUSE CATEGORY TOR_F_SCALE TOR_LENGTH
-## 10147         0             NA          NA       NA                      0
-##       TOR_WIDTH TOR_OTHER_WFO TOR_OTHER_CZ_STATE TOR_OTHER_CZ_FIPS
-## 10147         0            NA                 NA                NA
-##       TOR_OTHER_CZ_NAME BEGIN_RANGE BEGIN_AZIMUTH BEGIN_LOCATION END_RANGE
-## 10147                NA           0                       Severn         0
-##       END_AZIMUTH END_LOCATION BEGIN_LAT BEGIN_LON END_LAT END_LON
-## 10147                                 NA        NA      NA      NA
-##       EPISODE_NARRATIVE
-## 10147                NA
-##                                                                                                           EVENT_NARRATIVE
-## 10147 Trees were downed and a warehouse was partially collapsed by strong winds associated with an intense thunderstorm. 
-##       DATA_SOURCE
-## 10147         CSV</code></pre>
-<pre class="r"><code># 15 minutes difference, no property damage in the original
-
-# Let's check smaller scale.
-somedmg.2&lt;-tail(s[s$PROPDMG&gt;0 &amp;
-                             s$BGN_DATE&lt;ymd(&quot;2011-01-01&quot;) &amp;
-                             s$PROPDMGEXP == &quot;2&quot;,],1)
-somedmg.2</code></pre>
-<pre><code>##        STATE__   BGN_DATE BGN_TIME TIME_ZONE COUNTY COUNTYNAME STATE
-## 212832      29 1995-06-08     0459       CST     27   CALLAWAY    MO
-##                   EVTYPE BGN_RANGE BGN_AZI BGN_LOCATI END_DATE END_TIME
-## 212832 THUNDERSTORM WIND         1      NE   Shamrock                  
-##        COUNTY_END COUNTYENDN END_RANGE END_AZI END_LOCATI LENGTH WIDTH  F
-## 212832          0         NA         0                         0     0 NA
-##        MAG FATALITIES INJURIES PROPDMG PROPDMGEXP CROPDMG CROPDMGEXP WFO
-## 212832   0          0        0      12          2       0               
-##        STATEOFFIC ZONENAMES LATITUDE LONGITUDE LATITUDE_E LONGITUDE_
-## 212832                             0         0          0          0
-##                                                                                                                REMARKS
-## 212832 Wind gusts reached 60 mph in Fulton and a mobile home was heavily damaged in the northeast part of the county. 
-##        REFNUM Year
-## 212832 212751 1995</code></pre>
-<pre class="r"><code># Thunderstorm in Callaway country, MO on June 8th. Still 1995.
-sum(bit1995$CZ_FIPS == somedmg.2$COUNTY &amp;
-            bit1995$STATE_FIPS == somedmg.2$STATE__ &amp;
-            bit1995$BEGIN_YEARMONTH == 199506 &amp;
-            bit1995$BEGIN_DAY == 08)</code></pre>
-<pre><code>## [1] 2</code></pre>
-<pre class="r"><code># Two events
-bit1995[bit1995$CZ_FIPS == somedmg.2$COUNTY &amp;
-            bit1995$STATE_FIPS == somedmg.2$STATE__ &amp;
-            bit1995$BEGIN_YEARMONTH == 199506 &amp;
-            bit1995$BEGIN_DAY == 08,]</code></pre>
-<pre><code>##       BEGIN_YEARMONTH BEGIN_DAY BEGIN_TIME END_YEARMONTH END_DAY END_TIME
-## 16616          199506         8        450        199506       8      450
-## 16617          199506         8        459        199506       8      459
-##       EPISODE_ID EVENT_ID    STATE STATE_FIPS YEAR MONTH_NAME
-## 16616         NA 10333039 MISSOURI         29 1995  June     
-## 16617         NA 10333040 MISSOURI         29 1995  June     
-##              EVENT_TYPE CZ_TYPE CZ_FIPS  CZ_NAME WFO    BEGIN_DATE_TIME
-## 16616 Thunderstorm Wind       C      27 CALLAWAY  NA 08-JUN-95 04:50:00
-## 16617 Thunderstorm Wind       C      27 CALLAWAY  NA 08-JUN-95 04:59:00
-##       CZ_TIMEZONE      END_DATE_TIME INJURIES_DIRECT INJURIES_INDIRECT
-## 16616         CST 08-JUN-95 04:50:00               0                 0
-## 16617         CST 08-JUN-95 04:59:00               0                 0
-##       DEATHS_DIRECT DEATHS_INDIRECT DAMAGE_PROPERTY DAMAGE_CROPS SOURCE
-## 16616             0               0               0            0     NA
-## 16617             0               0             122            0     NA
-##       MAGNITUDE MAGNITUDE_TYPE FLOOD_CAUSE CATEGORY TOR_F_SCALE TOR_LENGTH
-## 16616        52             NA          NA       NA                      0
-## 16617         0             NA          NA       NA                      0
-##       TOR_WIDTH TOR_OTHER_WFO TOR_OTHER_CZ_STATE TOR_OTHER_CZ_FIPS
-## 16616         0            NA                 NA                NA
-## 16617         0            NA                 NA                NA
-##       TOR_OTHER_CZ_NAME BEGIN_RANGE BEGIN_AZIMUTH BEGIN_LOCATION END_RANGE
-## 16616                NA           0                       Fulton         0
-## 16617                NA           1            NE       Shamrock         0
-##       END_AZIMUTH END_LOCATION BEGIN_LAT BEGIN_LON END_LAT END_LON
-## 16616                                 NA        NA      NA      NA
-## 16617                                 NA        NA      NA      NA
-##       EPISODE_NARRATIVE
-## 16616                NA
-## 16617                NA
-##                                                                                                       EVENT_NARRATIVE
-## 16616 Wind gusts reached 60 mph in Fulton and a mobile home was heavily damaged in the northeast part of the county. 
-## 16617 Wind gusts reached 60 mph in Fulton and a mobile home was heavily damaged in the northeast part of the county. 
-##       DATA_SOURCE
-## 16616         CSV
-## 16617         CSV</code></pre>
-<pre class="r"><code># The one at 4:59 did 122 dollars of damage to a mobile home. Again,
-# the last digit was split to EXP field. Not much for &quot;heavily damaged&quot;.
-# Perhaps the original file is actually wrong?</code></pre>
-<p>It’s not 10^n. It appears that numbers in PROPDMGEXP field is a processing error and they should be glued to PROPDMG. What about “-”, “?”, “+” there?</p>
-<pre class="r"><code>somedmg.minus&lt;-tail(s[s$PROPDMG&gt;0 &amp;
-                             s$BGN_DATE&lt;ymd(&quot;2011-01-01&quot;) &amp;
-                             s$PROPDMGEXP == &quot;-&quot;,],1)
-somedmg.minus</code></pre>
-<pre><code>##        STATE__   BGN_DATE BGN_TIME TIME_ZONE COUNTY
-## 229327      41 1995-12-12     1000       PST      0
-##                        COUNTYNAME STATE    EVTYPE BGN_RANGE BGN_AZI
-## 229327 ORZ004 - 05 - 06 - 08 - 09    OR HIGH WIND         0        
-##        BGN_LOCATI           END_DATE END_TIME COUNTY_END COUNTYENDN
-## 229327            12/12/1995 0:00:00     2000          0         NA
-##        END_RANGE END_AZI END_LOCATI LENGTH WIDTH  F MAG FATALITIES
-## 229327         0                         0     0 NA   0          2
-##        INJURIES PROPDMG PROPDMGEXP CROPDMG CROPDMGEXP WFO STATEOFFIC
-## 229327        0      15          -       0                          
-##                                                                                                                                            ZONENAMES
-## 229327 CENTRAL COAST RANGE OF W OREGO - CENTRAL COAST RANGE OF W OREGO - LOWER COLUMBIA - GREATER PORTLAND METRO AREA - WESTERN COLUMBIA RIVER GORGE
-##        LATITUDE LONGITUDE LATITUDE_E LONGITUDE_
-## 229327        0         0          0          0
-##                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  REMARKS
-## 229327 The massive storm that produced high winds on the coast spread strong and damaging winds to most of Oregon as it moved northward offshore during the day of the 12th.  Two people were killed, and widespread damage occurred due to falling trees.  Power was out for over a day at many locations.  Highest reported wind gusts included 74 mph at Portland, with wind blowing out windows downtown, Beaverton and Canby 65 mph, Dallas 60 mph, Troutdale and Salem 58 mph, Cave Junction 64 mph, and Bend sustained 45 mph winds with trees blown down near LaPine. A Forest Grove woman died when a tree fell onto the car she was driving, and a Beavercreek woman died from head injuries when she was knocked down by a livestock gate she was opening that was caught by a strong wind gust. F51V, F53O. 
-##        REFNUM Year
-## 229327 229314 1995</code></pre>
-<pre class="r"><code># High wind in Oregon on December 12th. Still 1995.
-# County is zero.
-sum(bit1995$STATE_FIPS == somedmg.minus$STATE__ &amp;
-            bit1995$BEGIN_YEARMONTH == 199512 &amp;
-            bit1995$BEGIN_DAY == 12)</code></pre>
-<pre><code>## [1] 0</code></pre>
-<pre class="r"><code># No events in Oregon on December 12th.
-sum(bit1995$STATE_FIPS == somedmg.minus$STATE__ &amp;
-            bit1995$BEGIN_YEARMONTH == 199512)</code></pre>
-<pre><code>## [1] 0</code></pre>
-<pre class="r"><code># Nothing in all December.
-sum(bit1995$STATE_FIPS == somedmg.minus$STATE__)</code></pre>
-<pre><code>## [1] 39</code></pre>
-<pre class="r"><code># 39 events in Oregon. Does one lack county?
-bit1995[bit1995$STATE_FIPS == somedmg.minus$STATE__,]$CZ_FIPS</code></pre>
-<pre><code>##  [1]  1  1 19 19 21 21 23 35 45 29 29 29 29 29 29 29 29 33 35 25  1  1  1
-## [24] 59 59 59 59 59 59 59 59 59 61 45 45 49 49 51 51</code></pre>
-<pre class="r"><code># No luck. Well, there's just a single minus, let's just ignore it.
-
-somedmg.plus&lt;-tail(s[s$PROPDMG&gt;0 &amp;
-                             s$BGN_DATE&lt;ymd(&quot;2011-01-01&quot;) &amp;
-                             s$PROPDMGEXP == &quot;+&quot;,],1)
-somedmg.plus</code></pre>
-<pre><code>##        STATE__   BGN_DATE BGN_TIME TIME_ZONE COUNTY         COUNTYNAME
-## 216802      32 1995-06-05     1304       PDT      0 NVZ003 - 004 - 007
-##        STATE  EVTYPE BGN_RANGE BGN_AZI      BGN_LOCATI         END_DATE
-## 216802    NV TORNADO         0         Extreme Western 6/5/1995 0:00:00
-##        END_TIME COUNTY_END COUNTYENDN END_RANGE END_AZI END_LOCATI LENGTH
-## 216802  1330PDT          0         NA         0                       0.5
-##        WIDTH  F MAG FATALITIES INJURIES PROPDMG PROPDMGEXP CROPDMG
-## 216802   300 NA   0          0        0      60          +       0
-##        CROPDMGEXP WFO STATEOFFIC
-## 216802                          
-##                                                                                                                                ZONENAMES
-## 216802 GREATER RENO / CARSON CITY / M - GREATER RENO / CARSON CITY / M - WESTERN NEVADA BASIN AND RANGE - WESTERN NEVADA BASIN AND RANGE
-##        LATITUDE LONGITUDE LATITUDE_E LONGITUDE_
-## 216802        0         0          0          0
-##                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   REMARKS
-## 216802 Nevada, West- ,,,,,,,,,,,,,,,Funnel Clouds Central Nevada,,,,,,,,,,High Winds East-Central Nevada,A strong cold front stretching from northeast Nevada into south-central Nevada triggered a tornado in the Silver Springs area.  The tornado was reported on the ground by the Nevada Office of Emergency Management at 1300 PDT.  It stayed on the ground for several hundred yards and then lifted again.  In its path three mobile homes were damaged, one was destroyed, power lines were downed and at least 12 homes were damaged.  Several trees were uprooted and fences downed.  A funnel cloud was also spotted in west Carson City moving towards Dayton.  Farther along the front, winds gusted to 61 mph at Ely where siding was blown off some houses and power lines were downed. 
-##        REFNUM Year
-## 216802 216709 1995</code></pre>
-<pre class="r"><code># Tornado in multiple counties in NV, June 5th, 1995.
-sum(bit1995$STATE_FIPS == somedmg.plus$STATE__ &amp;
-            bit1995$BEGIN_YEARMONTH == 199506)</code></pre>
-<pre><code>## [1] 2</code></pre>
-<pre class="r"><code># Two events.
-bit1995[bit1995$STATE_FIPS == somedmg.plus$STATE__ &amp;
-            bit1995$BEGIN_YEARMONTH == 199506,]</code></pre>
-<pre><code>##       BEGIN_YEARMONTH BEGIN_DAY BEGIN_TIME END_YEARMONTH END_DAY END_TIME
-## 442            199506         1       1630        199506       1     1910
-## 10449          199506         5       1304        199506       5     1330
-##       EPISODE_ID EVENT_ID  STATE STATE_FIPS YEAR MONTH_NAME    EVENT_TYPE
-## 442           NA 10335845 NEVADA         32 1995  June      HAIL FLOODING
-## 10449         NA 10335867 NEVADA         32 1995  June            Tornado
-##       CZ_TYPE CZ_FIPS            CZ_NAME WFO    BEGIN_DATE_TIME
-## 442         C       0       NVZ003 - 004  NA 01-JUN-95 16:30:00
-## 10449       C       0 NVZ003 - 004 - 007  NA 05-JUN-95 13:04:00
-##       CZ_TIMEZONE      END_DATE_TIME INJURIES_DIRECT INJURIES_INDIRECT
-## 442           PDT 01-JUN-95 19:10:00               0                 0
-## 10449         PDT 05-JUN-95 13:30:00               0                 0
-##       DEATHS_DIRECT DEATHS_INDIRECT DAMAGE_PROPERTY DAMAGE_CROPS SOURCE
-## 442               0               0               0            0     NA
-## 10449             0               0              60            0     NA
-##       MAGNITUDE MAGNITUDE_TYPE FLOOD_CAUSE CATEGORY TOR_F_SCALE TOR_LENGTH
-## 442           0             NA          NA       NA                    0.0
-## 10449         0             NA          NA       NA                    0.5
-##       TOR_WIDTH TOR_OTHER_WFO TOR_OTHER_CZ_STATE TOR_OTHER_CZ_FIPS
-## 442           0            NA                 NA                NA
-## 10449       300            NA                 NA                NA
-##       TOR_OTHER_CZ_NAME BEGIN_RANGE BEGIN_AZIMUTH  BEGIN_LOCATION
-## 442                  NA           0                              
-## 10449                NA           0               Extreme Western
-##       END_RANGE END_AZIMUTH END_LOCATION BEGIN_LAT BEGIN_LON END_LAT
-## 442           0                                 NA        NA      NA
-## 10449         0                                 NA        NA      NA
-##       END_LON EPISODE_NARRATIVE
-## 442        NA                NA
-## 10449      NA                NA
-##                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          EVENT_NARRATIVE
-## 442                                                                                                                                                                                                                                                                                            Nevada, West-Central Nevada,Strong thunderstorms developed across the area prompting the issuance of severe thunderstorm and flash flood warnings.  Spotters in southern Douglas and eastern Churchill County reported one-inch-diameter hail.  A windshield on a Navy jet was shattered by three-quarters-inch-diameter hail in Dixie Valley east of Fallon.  Flooding was reported in the Ranchos area south of Gardnerville where an estimated two to three inches of rain fell in a two-hour period. 
-## 10449 Nevada, West- ,,,,,,,,,,,,,,,Funnel Clouds Central Nevada,,,,,,,,,,High Winds East-Central Nevada,A strong cold front stretching from northeast Nevada into south-central Nevada triggered a tornado in the Silver Springs area.  The tornado was reported on the ground by the Nevada Office of Emergency Management at 1300 PDT.  It stayed on the ground for several hundred yards and then lifted again.  In its path three mobile homes were damaged, one was destroyed, power lines were downed and at least 12 homes were damaged.  Several trees were uprooted and fences downed.  A funnel cloud was also spotted in west Carson City moving towards Dayton.  Farther along the front, winds gusted to 61 mph at Ely where siding was blown off some houses and power lines were downed. 
-##       DATA_SOURCE
-## 442           CSV
-## 10449         CSV</code></pre>
-<pre class="r"><code># Here it is
-bit1995[10449,]</code></pre>
-<pre><code>##       BEGIN_YEARMONTH BEGIN_DAY BEGIN_TIME END_YEARMONTH END_DAY END_TIME
-## 10449          199506         5       1304        199506       5     1330
-##       EPISODE_ID EVENT_ID  STATE STATE_FIPS YEAR MONTH_NAME EVENT_TYPE
-## 10449         NA 10335867 NEVADA         32 1995  June         Tornado
-##       CZ_TYPE CZ_FIPS            CZ_NAME WFO    BEGIN_DATE_TIME
-## 10449       C       0 NVZ003 - 004 - 007  NA 05-JUN-95 13:04:00
-##       CZ_TIMEZONE      END_DATE_TIME INJURIES_DIRECT INJURIES_INDIRECT
-## 10449         PDT 05-JUN-95 13:30:00               0                 0
-##       DEATHS_DIRECT DEATHS_INDIRECT DAMAGE_PROPERTY DAMAGE_CROPS SOURCE
-## 10449             0               0              60            0     NA
-##       MAGNITUDE MAGNITUDE_TYPE FLOOD_CAUSE CATEGORY TOR_F_SCALE TOR_LENGTH
-## 10449         0             NA          NA       NA                    0.5
-##       TOR_WIDTH TOR_OTHER_WFO TOR_OTHER_CZ_STATE TOR_OTHER_CZ_FIPS
-## 10449       300            NA                 NA                NA
-##       TOR_OTHER_CZ_NAME BEGIN_RANGE BEGIN_AZIMUTH  BEGIN_LOCATION
-## 10449                NA           0               Extreme Western
-##       END_RANGE END_AZIMUTH END_LOCATION BEGIN_LAT BEGIN_LON END_LAT
-## 10449         0                                 NA        NA      NA
-##       END_LON EPISODE_NARRATIVE
-## 10449      NA                NA
-##                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          EVENT_NARRATIVE
-## 10449 Nevada, West- ,,,,,,,,,,,,,,,Funnel Clouds Central Nevada,,,,,,,,,,High Winds East-Central Nevada,A strong cold front stretching from northeast Nevada into south-central Nevada triggered a tornado in the Silver Springs area.  The tornado was reported on the ground by the Nevada Office of Emergency Management at 1300 PDT.  It stayed on the ground for several hundred yards and then lifted again.  In its path three mobile homes were damaged, one was destroyed, power lines were downed and at least 12 homes were damaged.  Several trees were uprooted and fences downed.  A funnel cloud was also spotted in west Carson City moving towards Dayton.  Farther along the front, winds gusted to 61 mph at Ely where siding was blown off some houses and power lines were downed. 
-##       DATA_SOURCE
-## 10449         CSV</code></pre>
-<pre class="r"><code># Just 60 for described damage doesn't seem right, but it's what in both
-# files, and plus doesn't match anything.</code></pre>
-<p>There’s was no clear logic in additional symbols, so we’ll apply following strategy: * H for hundred, K for thousand, M for million, B for billion; * digits should be glued to base number; * other symbols discarded, assuming their smaller share won’t affect results in a significant way.</p>
+<pre class="r"><code># Seems to be the same event with minor GPS variation, AND &quot;k&quot; was indeed
+# in original damage field</code></pre>
+<p>EXP markers were used to have damage variables brought to the same scale and added to a new variable.</p>
 <pre class="r"><code>unexp&lt;-function(d,exp){
-        if(exp %in% c(&quot;h&quot;,&quot;H&quot;))
-                r&lt;-as.numeric(d)*100
+        if (d == 0)
+                r&lt;-0
         else if (exp %in% c(&quot;k&quot;,&quot;K&quot;))
                 r&lt;-as.numeric(d)*1000
         else if (exp %in% c(&quot;m&quot;,&quot;M&quot;))
                 r&lt;-as.numeric(d)*1000000
         else if (exp %in% c(&quot;b&quot;,&quot;B&quot;))
                 r&lt;-as.numeric(d)*1000000000
-        else if (exp %in% 0:9)
-                r&lt;-as.numeric(paste0(d,exp))
-        else r&lt;-d
+        else print(
+                paste0(&quot;d is &quot;,d,&quot;, exp is &quot;, exp,&quot;, and something is wrong&quot;))
         r}
 
-s$EconomicDamage&lt;-mapply(unexp,s$PROPDMG,s$PROPDMGEXP)+
+s$cost&lt;-mapply(unexp,s$PROPDMG,s$PROPDMGEXP)+
         mapply(unexp,s$CROPDMG,s$CROPDMGEXP)</code></pre>
-<p>For the harm done to humans, let’s count affected persons, killed or injured.</p>
-<pre class="r"><code>s$Affected&lt;-s$FATALITIES+s$INJURIES</code></pre>
-<p>Event type names seem to duplicate, let’s aggregate them.</p>
-<pre class="r"><code># After checking unique(s$EVTYPE)
-s$type&lt;-tolower(s$EVTYPE)
+<p>New variable was added to count all affected people - killed or injured.</p>
+<pre class="r"><code>s$Affected&lt;-s$FATALITIES+s$INJURIES
+# Rename for charting
+s&lt;-rename(s,Fatalities=FATALITIES)
+s&lt;-rename(s,Injuries=INJURIES)</code></pre>
+<p>Event types were checked and found to contain variations of the same event type name. Names were unified to have first letters of words in uppercase, and “TSTM” was expanded to “Thunderstorm”. Notices in parenthesis were dropped, and if there were several types separated with slash, only first one was kept.</p>
+<pre class="r"><code># Again, make sure levels are for current subset
+s$EVTYPE&lt;-factor(s$EVTYPE)
+evtype.count&lt;-table(s$EVTYPE)
+str(evtype.count)</code></pre>
+<pre><code>##  'table' int [1:222(1d)] 1 1 2 1 3 8 2 264 1 1 ...
+##  - attr(*, &quot;dimnames&quot;)=List of 1
+##   ..$ : chr [1:222] &quot;   HIGH SURF ADVISORY&quot; &quot; FLASH FLOOD&quot; &quot; TSTM WIND&quot; &quot; TSTM WIND (G45)&quot; ...</code></pre>
+<pre class="r"><code># Keep it in separate varible to be safe
+# Take only part before &quot; (&quot;
+s$type&lt;-sapply(as.character(s$EVTYPE),
+               function(x)
+                       unlist(strsplit(x,&quot; (&quot;,fixed=TRUE))[1])
+
+# Check dropped ones
+unique(s$EVTYPE[!s$EVTYPE %in% s$type])</code></pre>
+<pre><code>## [1] Ice jam flood (minor    TSTM WIND (G45)         TSTM WIND (41)         
+## [4] TSTM WIND (G40)          TSTM WIND (G45)        TSTM WIND  (G45)       
+## [7] HIGH WIND (G40)         TSTM WIND (G35)         THUNDERSTORM WIND (G40)
+## 222 Levels:    HIGH SURF ADVISORY  FLASH FLOOD ... WINTRY MIX</code></pre>
+<pre class="r"><code># Repeat for slash
+s$type&lt;-sapply(as.character(s$type),
+               function(x)
+                       unlist(strsplit(x,&quot;/&quot;,fixed=TRUE))[1])
+
+#All good. Convert first letters to uppercase.
+
+# Use modified function from toupper() help page
+.simpleCapDecap &lt;- function(x) {
+    s &lt;- strsplit(x, &quot; &quot;)[[1]]
+    paste(toupper(substring(s, 1, 1)), tolower(substring(s, 2)),
+          sep = &quot;&quot;, collapse = &quot; &quot;)
+}
+
+s$type&lt;-sapply(s$type,.simpleCapDecap)
+
+# retype() replaces fixed strings, aggr() replaces if pattern is found
+
+retype&lt;-function(df,from,to)
+        mutate(df,type=ifelse(type==from,to,type))
+
 aggr&lt;-function(df,pattern,to)
-        df %&gt;% mutate(type=ifelse(grepl(pattern,type,fixed=FALSE),to,type))
-s&lt;-aggr(s,&quot;tstm&quot;,&quot;thunderstorm&quot;)
-s&lt;-aggr(s,&quot;thunderstorm&quot;,&quot;thunderstorm&quot;)
+        mutate(df,type=ifelse(grepl(pattern,type,ignore.case=TRUE),to,type))
 
-s&lt;-aggr(s,&quot;wind&quot;,&quot;wind&quot;)
-s&lt;-aggr(s,&quot;wnd&quot;,&quot;wind&quot;)
+s&lt;-aggr(s,&quot;tstm w&quot;,&quot;Thunderstorm Wind&quot;)
 
-s&lt;-aggr(s,&quot;slide&quot;,&quot;debris flow&quot;)
-s&lt;-aggr(s,&quot;lands&quot;,&quot;debris flow&quot;)
+type.count&lt;-table(s$type)
+str(type.count)</code></pre>
+<pre><code>##  'table' int [1:153(1d)] 1 1 3 8 2 264 1 1 228 1 ...
+##  - attr(*, &quot;dimnames&quot;)=List of 1
+##   ..$ : chr [1:153] &quot;   High Surf Advisory&quot; &quot; Flash Flood&quot; &quot;Agricultural Freeze&quot; &quot;Astronomical High Tide&quot; ...</code></pre>
+<p><a href="http://www.ncdc.noaa.gov/stormevents/pd01016005curr.pdf">NWS Directive 10-1605</a> recognizes 48 event types. The list was copied to a reference vector. Types with alternative names were aggregated, and non-reference entries listed.</p>
+<pre class="r"><code>events&lt;-&quot;Astronomical Low Tide Z
+Avalanche Z
+Blizzard Z
+Coastal Flood Z
+Cold/Wind Chill Z
+Debris Flow C
+Dense Fog Z
+Dense Smoke Z
+Drought Z
+Dust Devil C
+Dust Storm Z
+Excessive Heat Z
+Extreme Cold/Wind Chill Z
+Flash Flood C
+Flood C
+Frost/Freeze Z
+Funnel Cloud C
+Freezing Fog Z
+Hail C
+Heat Z
+Heavy Rain C
+Heavy Snow Z
+High Surf Z
+High Wind Z
+Hurricane (Typhoon) Z
+Ice Storm Z
+Lake-Effect Snow Z
+Lakeshore Flood Z
+Lightning C
+Marine Hail M
+Marine High Wind M
+Marine Strong Wind M
+Marine Thunderstorm Wind M
+Rip Current Z
+Seiche Z
+Sleet Z
+Storm Surge/Tide Z
+Strong Wind Z
+Thunderstorm Wind C
+Tornado C
+Tropical Depression Z
+Tropical Storm Z
+Tsunami Z
+Volcanic Ash Z
+Waterspout M
+Wildfire Z
+Winter Storm Z
+Winter Weather&quot;
+# Last Z removed to simplify next action
+events&lt;-unlist(strsplit(events,&quot; [CZM]\n&quot;, per=TRUE))
 
-s&lt;-aggr(s,&quot;nado&quot;,&quot;tornado&quot;)
-s&lt;-aggr(s,&quot;ndao&quot;,&quot;tornado&quot;)
+s&lt;-retype(s,&quot;Cold&quot;,&quot;Cold/Wind Chill&quot;)
+s&lt;-retype(s,&quot;Wind Chill&quot;,&quot;Cold/Wind Chill&quot;)
+s&lt;-retype(s,&quot;Extreme Cold&quot;,&quot;Extreme Cold/Wind Chill&quot;)
+s&lt;-retype(s,&quot;Frost&quot;,&quot;Frost/Freeze&quot;)
+s&lt;-retype(s,&quot;Freeze&quot;,&quot;Frost/Freeze&quot;)
+s&lt;-retype(s,&quot;Hurricane&quot;,&quot;Hurricane (Typhoon)&quot;)
+s&lt;-retype(s,&quot;Typhoon&quot;,&quot;Hurricane (Typhoon)&quot;)
+s&lt;-retype(s,&quot;Storm Surge&quot;,&quot;Storm Surge/Tide&quot;)
+s&lt;-retype(s,&quot;Tide&quot;,&quot;Storm Surge/Tide&quot;)
 
-s&lt;-aggr(s,&quot;flash fl&quot;,&quot;flash&quot;)
-
-s&lt;-aggr(s,&quot;flood&quot;,&quot;flood&quot;)
-s&lt;-aggr(s,&quot;fld&quot;,&quot;flood&quot;)
-s&lt;-aggr(s,&quot;high water&quot;,&quot;flood&quot;)
-
-s&lt;-aggr(s,&quot;hail&quot;,&quot;hail&quot;)
-
-s&lt;-aggr(s,&quot;hail&quot;,&quot;hail&quot;)
-
-s&lt;-aggr(s,&quot;spout&quot;,&quot;spouts&quot;)
-
-s&lt;-aggr(s,&quot;cold&quot;,&quot;cold&quot;)
-s&lt;-aggr(s,&quot;frost&quot;,&quot;cold&quot;)
-s&lt;-aggr(s,&quot;freez&quot;,&quot;cold&quot;)
-s&lt;-aggr(s,&quot;low t&quot;,&quot;cold&quot;)
-s&lt;-aggr(s,&quot;hypoth&quot;,&quot;cold&quot;)
-
-s&lt;-aggr(s,&quot;snow&quot;,&quot;snow&quot;)
-
-s&lt;-aggr(s,&quot;lightn&quot;,&quot;lightning&quot;)
-
-s&lt;-aggr(s,&quot;blizz&quot;,&quot;blizzard&quot;)
-
-s&lt;-aggr(s,&quot;rain&quot;,&quot;rain&quot;)
-s&lt;-aggr(s,&quot;shower&quot;,&quot;rain&quot;)
-s&lt;-aggr(s,&quot;prec&quot;,&quot;rain&quot;)
-s&lt;-aggr(s,&quot;wet&quot;,&quot;rain&quot;)
-
-s&lt;-aggr(s,&quot;warm&quot;,&quot;heat&quot;)
-s&lt;-aggr(s,&quot;heat&quot;,&quot;heat&quot;)
-s&lt;-aggr(s,&quot;hot&quot;,&quot;heat&quot;)
-s&lt;-aggr(s,&quot;record high&quot;,&quot;heat&quot;)
-
-s&lt;-aggr(s,&quot;dry&quot;,&quot;drought&quot;)
-s&lt;-aggr(s,&quot;drie&quot;,&quot;drought&quot;)
-s&lt;-aggr(s,&quot;droug&quot;,&quot;drought&quot;)
-
-s&lt;-aggr(s,&quot;tide&quot;,&quot;tide&quot;)
-s&lt;-aggr(s,&quot;surf&quot;,&quot;tide&quot;)
-s&lt;-aggr(s,&quot;wave&quot;,&quot;tide&quot;)
-s&lt;-aggr(s,&quot;coastal surge&quot;,&quot;tide&quot;)
-s&lt;-aggr(s,&quot;high seas&quot;,&quot;tide&quot;)
-
-s&lt;-aggr(s,&quot;volcan&quot;,&quot;volcano&quot;)
-
-s&lt;-aggr(s,&quot;ice&quot;,&quot;ice&quot;)
-s&lt;-aggr(s,&quot;icy&quot;,&quot;ice&quot;)
-
-s&lt;-aggr(s,&quot;winter&quot;,&quot;winter&quot;)
-s&lt;-aggr(s,&quot;wintry&quot;,&quot;winter&quot;)
-
-s&lt;-aggr(s,&quot;fire&quot;,&quot;fires&quot;)
-
-s&lt;-aggr(s,&quot;swell&quot;,&quot;swells&quot;)
-
-s&lt;-aggr(s,&quot;hurr&quot;,&quot;hurricane&quot;)
-s&lt;-aggr(s,&quot;typh&quot;,&quot;hurricane&quot;)
-s&lt;-aggr(s,&quot;tropical&quot;,&quot;hurricane&quot;)
-
-s&lt;-aggr(s,&quot;dust&quot;,&quot;dust&quot;)
-
-s&lt;-aggr(s,&quot;temper&quot;,&quot;temperature&quot;)
-
-s&lt;-aggr(s,&quot;flash&quot;,&quot;flash flood&quot;)</code></pre>
-<p>The NOAA Storm Events Database <a href="https://www.ncdc.noaa.gov/stormevents/details.jsp">webpage</a> explains that before 1955 the only event type registered was tornado, and then until 1996 three types of events were recorded - tornado, thunderstorm wind and hail. Thus the comparison for event types should start in 1996.</p>
-<pre class="r"><code>recent&lt;-s[s$BGN_DATE&gt;ymd(&quot;1996-01-01&quot;),]</code></pre>
-<p>What are top 10 event types that caused most life loss and injuries?</p>
-<pre class="r"><code>deadly10&lt;-tapply(recent$Affected,recent$type,sum) %&gt;%
+# How may of EVTYPE are official? Make uppercase before comparison.
+type.count&lt;-table(s$type)
+irregulars&lt;-type.count[!names(type.count) %in% events]
+str(irregulars)</code></pre>
+<pre><code>##  int [1:106(1d)] 1 1 3 8 1 1 1 1 1 1 ...
+##  - attr(*, &quot;dimnames&quot;)=List of 1
+##   ..$ : chr [1:106] &quot;   High Surf Advisory&quot; &quot; Flash Flood&quot; &quot;Agricultural Freeze&quot; &quot;Astronomical High Tide&quot; ...</code></pre>
+<p>Further replacements were made to make event names adhere to reference. Two event types were added - Other and Urban, as there was no obvious replacement in the reference list.</p>
+<pre class="r"><code># Next commented command is for console to automate generating replacement calls
+# for(i in names(irregulars))cat(paste0('s&lt;-retype(s,&quot;',i,'&quot;,&quot;&quot;)\n'))
+# and clean names to replace
+# cat(events,sep=&quot;\n&quot;)
+# Copy first printout here, use second one for copy-paste
+s&lt;-retype(s,&quot;   High Surf Advisory&quot;,&quot;High Surf&quot;)
+s&lt;-retype(s,&quot; Flash Flood&quot;,&quot;Flash Flood&quot;)
+s&lt;-retype(s,&quot;Agricultural Freeze&quot;,&quot;Frost/Freeze&quot;)
+s&lt;-retype(s,&quot;Astronomical High Tide&quot;,&quot;Storm Surge/Tide&quot;)
+s&lt;-retype(s,&quot;Beach Erosion&quot;,&quot;High Surf&quot;)
+s&lt;-retype(s,&quot;Black Ice&quot;,&quot;Frost/Freeze&quot;)
+s&lt;-retype(s,&quot;Blowing Dust&quot;,&quot;Dust Storm&quot;)
+s&lt;-retype(s,&quot;Blowing Snow&quot;,&quot;Winter Storm&quot;)
+s&lt;-retype(s,&quot;Brush Fire&quot;,&quot;Wildfire&quot;)
+s&lt;-retype(s,&quot;Coastal  Flooding&quot;,&quot;Coastal Flood&quot;)
+s&lt;-retype(s,&quot;Coastal Erosion&quot;,&quot;High Surf&quot;)
+s&lt;-retype(s,&quot;Coastal Flooding&quot;,&quot;Coastal Flood&quot;)
+s&lt;-retype(s,&quot;Coastal Storm&quot;,&quot;Tropical Storm&quot;)
+s&lt;-retype(s,&quot;Coastalstorm&quot;,&quot;Tropical Storm&quot;)
+s&lt;-retype(s,&quot;Cold And Snow&quot;,&quot;Cold/Wind Chill&quot;)
+s&lt;-retype(s,&quot;Cold Temperature&quot;,&quot;Cold/Wind Chill&quot;)
+s&lt;-retype(s,&quot;Cold Weather&quot;,&quot;Cold/Wind Chill&quot;)
+s&lt;-retype(s,&quot;Dam Break&quot;,&quot;Lakeshore Flood&quot;)
+s&lt;-retype(s,&quot;Damaging Freeze&quot;,&quot;Frost/Freeze&quot;)
+s&lt;-retype(s,&quot;Downburst&quot;,&quot;Thunderstorm Wind&quot;)
+s&lt;-retype(s,&quot;Drowning&quot;,&quot;Flood&quot;)
+s&lt;-retype(s,&quot;Dry Microburst&quot;,&quot;Thunderstorm Wind&quot;)
+s&lt;-retype(s,&quot;Early Frost&quot;,&quot;Frost/Freeze&quot;)
+s&lt;-retype(s,&quot;Erosion&quot;,&quot;High Surf&quot;)
+s&lt;-retype(s,&quot;Excessive Snow&quot;,&quot;Winter Weather&quot;)
+s&lt;-retype(s,&quot;Extended Cold&quot;,&quot;Frost/Freeze&quot;)
+s&lt;-retype(s,&quot;Extreme Windchill&quot;,&quot;Extreme Cold/Wind Chill&quot;)
+s&lt;-retype(s,&quot;Falling Snow&quot;,&quot;Winter Weather&quot;)
+s&lt;-retype(s,&quot;Fog&quot;,&quot;Dense Fog&quot;)
+s&lt;-retype(s,&quot;Freezing Drizzle&quot;,&quot;Sleet&quot;)
+s&lt;-retype(s,&quot;Freezing Rain&quot;,&quot;Sleet&quot;)
+s&lt;-retype(s,&quot;Freezing Spray&quot;,&quot;Sleet&quot;)
+s&lt;-retype(s,&quot;Glaze&quot;,&quot;Winter Weather&quot;)
+s&lt;-retype(s,&quot;Gradient Wind&quot;,&quot;Strong Wind&quot;)
+s&lt;-retype(s,&quot;Gusty Wind&quot;,&quot;Strong Wind&quot;)
+s&lt;-retype(s,&quot;Gusty Winds&quot;,&quot;Strong Wind&quot;)
+s&lt;-retype(s,&quot;Hard Freeze&quot;,&quot;Frost/Freeze&quot;)
+s&lt;-retype(s,&quot;Hazardous Surf&quot;,&quot;High Surf&quot;)
+s&lt;-retype(s,&quot;Heat Wave&quot;,&quot;Excessive Heat&quot;)
+s&lt;-retype(s,&quot;Heavy Seas&quot;,&quot;Storm Surge/Tide&quot;)
+s&lt;-retype(s,&quot;Heavy Snow Shower&quot;,&quot;Heavy Snow&quot;)
+s&lt;-retype(s,&quot;Heavy Surf&quot;,&quot;High Surf&quot;)
+s&lt;-retype(s,&quot;Heavy Surf And Wind&quot;,&quot;High Surf&quot;)
+s&lt;-retype(s,&quot;High Seas&quot;,&quot;High Surf&quot;)
+s&lt;-retype(s,&quot;High Swells&quot;,&quot;High Surf&quot;)
+s&lt;-retype(s,&quot;High Water&quot;,&quot;High Surf&quot;)
+s&lt;-retype(s,&quot;High Winds&quot;,&quot;Strong Wind&quot;)
+s&lt;-retype(s,&quot;Hurricane Edouard&quot;,&quot;Hurricane (Typhoon)&quot;)
+s&lt;-retype(s,&quot;Hyperthermia&quot;,&quot;Cold/Wind Chill&quot;)
+s&lt;-retype(s,&quot;Hypothermia&quot;,&quot;Cold/Wind Chill&quot;)
+s&lt;-retype(s,&quot;Ice Jam Flood&quot;,&quot;Flood&quot;)
+s&lt;-retype(s,&quot;Ice On Road&quot;,&quot;Frost/Freeze&quot;)
+s&lt;-retype(s,&quot;Ice Roads&quot;,&quot;Frost/Freeze&quot;)
+s&lt;-retype(s,&quot;Icy Roads&quot;,&quot;Frost/Freeze&quot;)
+s&lt;-retype(s,&quot;Lake-effect Snow&quot;,&quot;Heavy Snow&quot;)
+s&lt;-retype(s,&quot;Lake Effect Snow&quot;,&quot;Heavy Snow&quot;)
+s&lt;-retype(s,&quot;Landslide&quot;,&quot;Debris Flow&quot;)
+s&lt;-retype(s,&quot;Landslides&quot;,&quot;Debris Flow&quot;)
+s&lt;-retype(s,&quot;Landslump&quot;,&quot;Debris Flow&quot;)
+s&lt;-retype(s,&quot;Landspout&quot;,&quot;Dust Devil&quot;)
+s&lt;-retype(s,&quot;Late Season Snow&quot;,&quot;Winter Weather&quot;)
+s&lt;-retype(s,&quot;Light Freezing Rain&quot;,&quot;Winter Weather&quot;)
+s&lt;-retype(s,&quot;Light Snow&quot;,&quot;Winter Weather&quot;)
+s&lt;-retype(s,&quot;Light Snowfall&quot;,&quot;Winter Weather&quot;)
+s&lt;-retype(s,&quot;Marine Accident&quot;,&quot;Marine Strong Wind&quot;)
+s&lt;-retype(s,&quot;Microburst&quot;,&quot;Dust Devil&quot;)
+s&lt;-retype(s,&quot;Mixed Precip&quot;,&quot;Heavy Rain&quot;)
+s&lt;-retype(s,&quot;Mixed Precipitation&quot;,&quot;Heavy Rain&quot;)
+s&lt;-retype(s,&quot;Mud Slide&quot;,&quot;Debris Flow&quot;)
+s&lt;-retype(s,&quot;Mudslide&quot;,&quot;Debris Flow&quot;)
+s&lt;-retype(s,&quot;Mudslides&quot;,&quot;Debris Flow&quot;)
+s&lt;-retype(s,&quot;Non-severe Wind Damage&quot;,&quot;Strong Wind&quot;)
+#s&lt;-retype(s,&quot;Other&quot;,&quot;&quot;)
+s&lt;-retype(s,&quot;Rain&quot;,&quot;Heavy Rain&quot;)
+s&lt;-retype(s,&quot;Record Heat&quot;,&quot;Excessive Heat&quot;)
+s&lt;-retype(s,&quot;Rip Currents&quot;,&quot;Rip Current&quot;)
+s&lt;-retype(s,&quot;River Flood&quot;,&quot;Flood&quot;)
+s&lt;-retype(s,&quot;River Flooding&quot;,&quot;Flood&quot;)
+s&lt;-retype(s,&quot;Rock Slide&quot;,&quot;Debris Flow&quot;)
+s&lt;-retype(s,&quot;Rogue Wave&quot;,&quot;Storm Surge/Tide&quot;)
+s&lt;-retype(s,&quot;Rough Seas&quot;,&quot;Marine High Wind&quot;)
+s&lt;-retype(s,&quot;Rough Surf&quot;,&quot;High Surf&quot;)
+s&lt;-retype(s,&quot;Small Hail&quot;,&quot;Hail&quot;)
+s&lt;-retype(s,&quot;Snow&quot;,&quot;Heavy Snow&quot;)
+s&lt;-retype(s,&quot;Snow And Ice&quot;,&quot;Heavy Snow&quot;)
+s&lt;-retype(s,&quot;Snow Squall&quot;,&quot;Heavy Snow&quot;)
+s&lt;-retype(s,&quot;Snow Squalls&quot;,&quot;Heavy Snow&quot;)
+s&lt;-retype(s,&quot;Strong Winds&quot;,&quot;High Wind&quot;)
+s&lt;-retype(s,&quot;Thunderstorm&quot;,&quot;Thunderstorm Wind&quot;)
+s&lt;-retype(s,&quot;Tidal Flooding&quot;,&quot;Coastal Flood&quot;)
+s&lt;-retype(s,&quot;Torrential Rainfall&quot;,&quot;Heavy Rain&quot;)
+s&lt;-retype(s,&quot;Unseasonable Cold&quot;,&quot;Cold/Wind Chill&quot;)
+s&lt;-retype(s,&quot;Unseasonably Cold&quot;,&quot;Cold/Wind Chill&quot;)
+s&lt;-retype(s,&quot;Unseasonably Warm&quot;,&quot;Heat&quot;)
+s&lt;-retype(s,&quot;Unseasonal Rain&quot;,&quot;Heavy Rain&quot;)
+#s&lt;-retype(s,&quot;Urban&quot;,&quot;&quot;)
+s&lt;-retype(s,&quot;Warm Weather&quot;,&quot;Heat&quot;)
+s&lt;-retype(s,&quot;Wet Microburst&quot;,&quot;Thunderstorm Wind&quot;)
+s&lt;-retype(s,&quot;Whirlwind&quot;,&quot;Thunderstorm Wind&quot;)
+s&lt;-retype(s,&quot;Wild&quot;,&quot;Other&quot;)
+s&lt;-retype(s,&quot;Wind&quot;,&quot;High Wind&quot;)
+s&lt;-retype(s,&quot;Wind And Wave&quot;,&quot;Tropical Storm&quot;)
+s&lt;-retype(s,&quot;Wind Damage&quot;,&quot;High Wind&quot;)
+s&lt;-retype(s,&quot;Winds&quot;,&quot;High Wind&quot;)
+s&lt;-retype(s,&quot;Winter Weather Mix&quot;,&quot;Winter Weather&quot;)
+s&lt;-retype(s,&quot;Wintry Mix&quot;,&quot;Winter Weather&quot;)
+s$type&lt;-as.factor(s$type)</code></pre>
+<p>Top 10 event types that caused most life loss and injuries were selected.</p>
+<pre class="r"><code>deadly10&lt;-tapply(s$Affected,s$type,sum) %&gt;%
         sort(decr=TRUE) %&gt;%
         head(10) %&gt;%
         data.frame
@@ -1128,19 +499,19 @@ deadly10$Event&lt;-rownames(deadly10)
 # Order it to prevent gplot from re-sorting bar alphabetically
 deadly10$Event&lt;-factor(deadly10$Event, levels=rev(deadly10$Event))
 print(deadly10, row.names=FALSE)</code></pre>
-<pre><code>##  Affected        Event
-##     22178      tornado
-##      9738         heat
-##      7299        flood
-##      5562 thunderstorm
-##      4790    lightning
-##      2561  flash flood
-##      2173         wind
-##      2105       winter
-##      1848    hurricane
-##      1545        fires</code></pre>
-<p>What are top event types that caused most economic damage?</p>
-<pre class="r"><code>costly10&lt;-tapply(recent$EconomicDamage,recent$type,sum) %&gt;%
+<pre><code>##  Affected               Event
+##     22178             Tornado
+##      8260      Excessive Heat
+##      7176               Flood
+##      5555   Thunderstorm Wind
+##      4790           Lightning
+##      2561         Flash Flood
+##      1485        Winter Storm
+##      1478                Heat
+##      1453 Hurricane (Typhoon)
+##      1449           High Wind</code></pre>
+<p>Top 10 event types that caused most economic damage were selected.</p>
+<pre class="r"><code>costly10&lt;-tapply(s$cost,s$type,sum) %&gt;%
         sort(decr=TRUE) %&gt;%
         head(10) %&gt;%
         data.frame
@@ -1148,19 +519,19 @@ names(costly10)&lt;-'EconomicDamage'
 costly10$Event&lt;-rownames(costly10)
 costly10$Event&lt;-factor(costly10$Event, levels=rev(costly10$Event))
 print(costly10, row.names=FALSE)</code></pre>
-<pre><code>##  EconomicDamage        Event
-##    149556745260        flood
-##     95390920360    hurricane
-##     43193541000  storm surge
-##     24900330720      tornado
-##     17092039870         hail
-##     16557160610  flash flood
-##     14415414600      drought
-##      8936430880 thunderstorm
-##      8162704630        fires
-##      6160169240         wind</code></pre>
-<p>Aggregate health damage cost by tornado annually.</p>
-<pre class="r"><code>Tornado&lt;-recent[recent$type==&quot;tornado&quot;,]
+<pre><code>##  EconomicDamage               Event
+##    149075954950               Flood
+##     87068996810 Hurricane (Typhoon)
+##     47845004000    Storm Surge/Tide
+##     24900330720             Tornado
+##     17092035870                Hail
+##     16557160610         Flash Flood
+##     14413667000             Drought
+##      8937741080   Thunderstorm Wind
+##      8321236550      Tropical Storm
+##      5886273950           High Wind</code></pre>
+<p>Numbers of people affected were reviewed annually.</p>
+<pre class="r"><code>Tornado&lt;-s[s$type==&quot;Tornado&quot;,]
 Annual.tornado.health.damage&lt;-with(Tornado, tapply(Affected,Year,sum))
 # Compendate for the missing month in 2011
 Annual.tornado.health.damage[&quot;2011&quot;]&lt;-
@@ -1170,8 +541,8 @@ Annual.tornado.health.damage</code></pre>
 ##  731 1101 2004 1936  923  783 1023 1141  431  575 1059  740 1819  418  744 
 ## 2011 
 ## 7364</code></pre>
-<p>There’s an outlier in 2011 (a quick google search shows there was indeed a deadliest tornado outbreak in April 2011), let’s see damages in 1996 - 2010 instead to set the outbreak aside.</p>
-<pre class="r"><code>framed&lt;-recent[recent$BGN_DATE&lt;ymd(&quot;2011-01-01&quot;),]
+<p>An outlier was found in 2011 and an google search showed there was indeed a deadliest tornado outbreak in April 2011, so damages were reviewed in 1996 - 2010 to set the outbreak aside.</p>
+<pre class="r"><code>framed&lt;-s[s$BGN_DATE&lt;ymd(&quot;2011-01-01&quot;),]
 
 deadly10&lt;-tapply(framed$Affected,framed$type,sum) %&gt;%
         sort(decr=TRUE) %&gt;%
@@ -1182,18 +553,18 @@ deadly10$Event&lt;-rownames(deadly10)
 # Order it to prevent gplot from re-sorting bar alphabetically
 deadly10$Event&lt;-factor(deadly10$Event, levels=rev(deadly10$Event))
 print(deadly10, row.names=FALSE)</code></pre>
-<pre><code>##  Affected        Event
-##     15428      tornado
-##      8890         heat
-##      7229        flood
-##      5118 thunderstorm
-##      4570    lightning
-##      2463  flash flood
-##      2102       winter
-##      2083         wind
-##      1843    hurricane
-##      1423        fires</code></pre>
-<pre class="r"><code>costly10&lt;-tapply(framed$EconomicDamage,framed$type,sum) %&gt;%
+<pre><code>##  Affected               Event
+##     15428             Tornado
+##      8086      Excessive Heat
+##      7108               Flood
+##      5128   Thunderstorm Wind
+##      4570           Lightning
+##      2463         Flash Flood
+##      1484        Winter Storm
+##      1453 Hurricane (Typhoon)
+##      1434           High Wind
+##       989         Rip Current</code></pre>
+<pre class="r"><code>costly10&lt;-tapply(framed$cost,framed$type,sum) %&gt;%
         sort(decr=TRUE) %&gt;%
         head(10) %&gt;%
         data.frame
@@ -1201,18 +572,18 @@ names(costly10)&lt;-'EconomicDamage'
 costly10$Event&lt;-rownames(costly10)
 costly10$Event&lt;-factor(costly10$Event, levels=rev(costly10$Event))
 print(costly10, row.names=FALSE)</code></pre>
-<pre><code>##  EconomicDamage        Event
-##    141649421810        flood
-##     95206677160    hurricane
-##     43193541000  storm surge
-##     16558376320         hail
-##     15084668910  flash flood
-##     15049369020      tornado
-##     14384026600      drought
-##      8414548670 thunderstorm
-##      7504589230        fires
-##      6033854510         wind</code></pre>
-<p>It looks like we can operate 1996-2010 year range to draw general conclusions, as dropping 2011 doesn’t change the event type comparison picture. Before 1996 the data was focused on tornadoes with thunderstorms added later, so we shouldn’t expect any possible changes to our conclusions from that data.</p>
+<pre><code>##  EconomicDamage               Event
+##    141203405500               Flood
+##     87047996810 Hurricane (Typhoon)
+##     47804309000    Storm Surge/Tide
+##     16558372320                Hail
+##     15084668910         Flash Flood
+##     15049369020             Tornado
+##     14382279000             Drought
+##      8416017670   Thunderstorm Wind
+##      8157993350      Tropical Storm
+##      5800029950           High Wind</code></pre>
+<p>It was decided to operate 1996-2010 year range to draw general conclusions, as dropping 2011 didn’t change the event type comparison picture - Tornado was still the biggest hazard to people, even before 2011 outbreak.</p>
 </div>
 <div id="results" class="section level2">
 <h2>Results</h2>
@@ -1226,7 +597,7 @@ print(costly10, row.names=FALSE)</code></pre>
         ylab(&quot;Number of people killed or injured&quot;)+
         xlab(&quot;Event type&quot;)
 print(redplot)</code></pre>
-<p><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAqAAAAHgCAMAAABNUi8GAAABGlBMVEUAAAAAADoAAGYAOjoAOmYAOpAAZrY6AAA6ADo6OgA6Ojo6ZmY6kNtmAABmADpmOgBmZgBmZmZmkJBmtrZmtttmtv9/f39/f5V/f6t/lcF/q6t/q8F/q9aQOgCQZgCQkDqQkGaQtpCQ27aQ2/+Vf3+Vf5WVf6uVlX+VlZWVlauVlcGVq6uVq9aVwcGVwdaVweurf3+rf5Wrf6urlX+rwcGr1v+2ZgC2/7a2/9u2///BlX/BlZXBlavBwZXBwavB1sHB6+vB6//Wq3/Wq5XW1qvW68HW/9bW/+vW///bkDrb25Db/7bb/9vb///l5eXrwZXr1tbr68Hr///y8vL/AAD/tmb/1qv/25D/68H//7b//9b//9v//+v///+UPVydAAAACXBIWXMAAA7DAAAOwwHHb6hkAAAfbklEQVR4nO2dj3/bxnmHKaeWnFZqt7aC7cxak1nOlm6J7STiFm1ZZy/tzC2ZNq+U9Qv//78x3O873AvqAB6Bl7zv87FMiDgAL4BHhzsQ93JWA8CY2dQBALAKCApYA0EBayAoYA0EBayBoIA1EBSwBoIC1kBQwBoIClgDQQFrIChgDQQFrIGggDUQFLAGggLWQFDAGggKWANBAWsgKGANBAWsgaCANRAUsAaCAtbsjqDLmeX4vrLXR6rI7UlK6VSuj/qt7Pbk4U+5tj3uFj4c7G9itRRFCtqYJItIP73iiwffrRPBfDbbe55YVmwqnz5U4J1bWHMvBRB0IGmn/MOBlnIxa4ovZ/aEzdc6dbcnPRafZxWUCrxzC+vtpQSCDiTllDfV596nUlBt1MJWoesK2sM3CJrIrgoqr97yl+Z8NNded1Kujw6bWvNYTskCy9mhW2R/Ia/Styf7wYJynirWvOetzW1INjH2XRRytXLSW1gWOtSbamb+15GeY8s0W17YloJ5V/8phWtrfvvPA7e2MLJ4C8Gm7bEwS+i5Onb1v1uftwdikX0IOhArqLiK68M7f/AXYjJoHSpB9WE2R1udug8Hh7qAt6BenSg3nwVrcxtygtZS8rnQVqzNW3ih2siHRp+f/Up74crcnnx0MAv3Yt/U8uHadAvarC2MLNpCuGk/eHGQzFxfULc+bw/U5EcQdBhW0LmWSdYrShf/kC7t+a5FnWBmuauimHILNif1UK7uWBc2lW6wIVd9fzg4Fss062hUDRYWMsiKW21KtYGDDehJtTetzc6DtTWTUt19FW4UWbCF1qa99S+CwJygbn1RdI2lEHQQxhF98ZZXxrm+ZvstrxWCyupPvuUW1HWsuO43Vzi/WedvyAkqFv/w6LNHz+v5w5+8hdWrbBEofcQWxCq8Ml6g/pJKQaKkda4VWWsLrU3bMP1jJ+b6grqK3G5TTy4h6DCMI1o9KZs+Hwv/Gk9e4rWgto3qFtSXOHl6F/Zq196Q1yNpvFw++MejQ2mqt7CetoIaGbwy3lr8JUVE4icqqa7G7jJtzQm30Np0ELzbVLBSuz5vm9Hf9MYpWdBWJ8ko2dg1V43XSFAlsD7R7Q15ai33ns+bBuC+uNZ7C1/LDot3iY8EffAdJai+gItlopJO0DCy1hZamw6CV0seti7xbn3eNiHoevS7xHfcZlru/c2RbHN5l/jDOuD6SOtOX+Kbt397clgvHvxOKmUX9v4u2oLaMoGg3mYXTY28H7wXCRpE1tpCa9O6rNHMzfXaDXZ9QU2LS/w60J0kWR0SnaT4Rr08uddHv3j0vPYXbJpnx7U6LeoMqbZda0OeWk1XvFnFcu9j1dk2C8vzqtp2c1vliv+9MsFa7LtCjb8Uv0UllaDN2qLIgi20Nu2tXyznz1W9ItPaFevz45ijk7QO9uyqq5Pqhu99bK7OlmXHR53mTpK6geoW1Bc51asPmnrehvy74gt1WZaNB7ewLiy79+ouZauFGDYU/M3qDnkdlTTNxf12ZOEWWpv21x8GJu+W/exX9jaT1wh1d5x+gdtMw2jdqJdHcf7gn05mYQfXCFq3HhbRHVd9SfMXdPf9Vd/BLeM2FKq172ozt7AU4XiulHj4o9fes2WCD3+8zTbbPQzf8wRVgYeRtbYQbtpewPVfrpsr1qKXc+vz4hCTuFGfk/6f7On+VIaPBMHaQNAI00OAoByAoC3cQ50QlAMQtIX7qBGCcmD3BQVbDQQFrIGggDVbJ6hrGQ5+IH3QgrbztNZz8OpjI/NBd48RdvbO4z2bt7Nb5boWC4YPHrYn5a3Q8Omt4Iaof9d1E8MQ66IEtYPFBilmR8RlErTPCLu6p6DEeLmOxczwweiR5Jn6nHM2Cwz1PlIKP4XrGoa4Plss6OAlhyjmHjZZW9DW+tLoJWjygCczfFB9jipvYHiT6sOr4Alq+Te1VA9Ke88xdA5DXB8Imob/IWoeQfutZROCuuGD+rMJ8eJN6j8i99CTnhLv+0+CrRiGuD7bKKgeyubacnufyU/Pvcl4kJs3Fqf16bc/Ouz+EXG1G4jmP0708McTMyRNP5A2M2XUyLbablo9XDRz44q8h+qoxcJhauRIu2DBH6Pxcm7Dfize8EGz9rkdPaAmW08Zeuvyn6XtHIaYgy0U1Axl8x8D8gaehWPQ7NCvtqD+sDrbsEoZEecGogWC/rV477cnOgBvEJoNymzaE9SLU0It1hqmRo60Cwa9GUFtObfhIBZJIJa4hHuTzTyxiagmdo8duoq9Y4zC+myfoHoU4r455upMmaFd3mR7kFt4iXcPcroiSSPi/KFuTlA9oEPOEfWLG4RmR7aZTd+qwcO2pSfjlFCLtYepkSPtWoPewvFy3oaDWCTm0W29p/IP2UwuZz+3f8QecmPtR+s7Rnmtz/YJap9zV4+i6wvqYR1Ptga5BYJ6j8K7Ikkj4txAtNYTw7oFZkqaQWjBE+qhoK3xdDW1WPsZdnKknb/gw/aIPG/D4dPyar1eL/7B7+SDz2ZyqSrb1uPz6pl9CNqFGynkRjLIA+NN0oPcAkH9wUSL1pVy9Yg4/zl4J6hT029AhGN86lhQF6feYrRY+5z7c9zS4YKt8XLBhlu9J/NkrGjo6rFYdnJpWrpi0jQNPhzIGgKX+C56CRoMcusU1BttljAiLkVQehBa3SmojoxaLEFQfzTeUEH19u0sVUXbx7qsoAsda7s7hE6SIe0STw1y67rEe0XCqa5LvBM0TIbg5viD0FYKGsZJLRZf4lvqEgv2FlS/542JWtrGee3fsl3M7PrCG0odwxDXZ/sE9YayregkEYPcvMFiQSfJFUkaERd0jcyN7UhQMwhtpaDBqDgz0V5s3u4kub8PYjSebRH3q0HlRpbybnt70u9VBZMP/VvyHcMQ12f7BFW3mUwdsfI2UzjIbRHcZvKH1dkiKSPivNPsDTCLL/EqypWCBqPi3PbCxVrD1OKGbjDoTc5ojcgLNkwLqldwSE56Y5pdk6T1oWbHMMT12UJBzVA2daRX3KhXJ8IO/bJ9dHOirIpudFjCiDj/NNsBZu1Okh2EtlpQP866runFwmFq7Tmt0Xhm68GIvPpeQfUK2pPyL3bfK+y1mcPHQjqGIa7P1glKEqQWyNdAB9Oz5YKqfozs1niTYHfYckH9VmOrAQl2gm0X1G81thqQYBeYRtD/7qBzxjD+L+/qEN1g0oKjVIGg6SC6wUBQkpIU4B0dBCUpSQHe0UFQkpIU4B3drgj6Z1ACEBSwBoIC1kBQwBoIClgDQQFrIChgDQQFrIGggDUQFLAGggLWQFDAGggKWMNM0JvXbyAo8BhX0KvP30FQ0AcIClgzqqA3r6rHb+qrU/n/F988+ePn31fVy7q+rKrqmXz55LWZ31BJulY29ZEDo9DHrzw16M2rs/ryybur07NGxZdiUr7z+I14uVAvzZt2GdSgRTP+JV5K+vrN1YumrhQ/6qrfvHP59L2coeZDUCAYX1Dh4d35mXFV/pxWzVX9Qgmq50NQIJiuBnWCiooUNSggGVlQoaJugzpBRYvzLdqggGJcQe/OqzPTi3eCNu9WX53LGV/6vXgICrh9kkQAQYsGggLWQFDAGggKWANBAWsgKGANBAWsgaCANRAUsGZ7BWWdhBXRDWdXEtiyPsiIbjgQlKQkBXhHB0FJSlKAd3S7IujUrXe2ZHMgGQhKMbUHbMnmQDIQlGJqD9iSzYFkICjF1B6wJZsDyUBQiqk9YEs2B5KBoBRTe8CWbA4kA0EppvaALdkcSAaCUkztAVuyOZAMBKWY2gO2ZHMgGQhKMbUHbMnmQDIQlGJqD9iSzYFkICjF1B6wJZsDyeyyoPemtIWgfcnmQDLFCRq82RXh1B6wJZsDyUBQiqk9YEs2B5LZbUF/qKozmR1cZLSTycBVpnAIOpBsDiSz04KePhPJFkXG2oun73UycF2DIkf9IDZwlraEjQiqsoB7WWt1DltL15/Q1B6wJVsllcxO16A6yfJpVelvAKkeQ9C1yOZAMiUIqpTUycAh6DpkcyCZAgQVbVCXDFx4CkGHks2BZAoQVH/Hl04GLjOFQ9CBZHMgmV0W9H66IpzaA7ZkcyAZCEoxtQdsyeZAMhCUYmoP2JLNgWQgKMXUHrAlmwPJQFCKqT1gSzYHkoGgFFN7wJZsDiQDQSmm9oAt2RxIBoJSTO0BW7I5kAwEpZjaA7ZkcyAZCEoxtQdsyeZAMhB0+H4kU1KKWN7RQVCSkhTgHR0EJSlJAd7RQVCSkhTgHd2uCDp1X2QM7M5C0KgUAQQdG7uzEDQqRQBBx8buLASNShFA0LGxOwtBo1IEEHRs7M5C0KgUAQQdG7uzEDQqRQBBx8buLASNShFA0LGxOwtBo1IEEHRs7M5C0KgUAQQdG7uzEDQqRQBBx8buLASNShFA0LGxOwtBo1IEGxD0bSXz1rbRmRghqAGCRqVGEbSdyQ6ChtidhaBRqVEEdYkXISiF3VkIGpUaQ1CRrvZbkd7uVCal1y+XVfUJBJXYnYWgUakxBNU1qMxM/8R/uZBfooAc9dkP+G6zKUF1gnr9cvn0PS7xGruzqEGjUiMKKpS8Oz/TLxcQ1GJ3FoJGpUYUFDVoF3ZnIWhUakRBu9qgENTuLASNSo0oaKsX37x8iRpUYncWgkalRhE0ha4Ip5ZnDOzOQtCoFAEEHRu7sxA0KkUAQcfG7iwEjUoRQNCxsTsLQaNSBBB0bOzOQtCoFAEEHRu7sxA0KkUAQcfG7iwEjUoRQNCxsTsLQaNSBBB0bOzOQtCoFAEEHRu7sxA0KkXAS1DWBxnRDQeCkpSkAO/oIChJSQrwjm5XBJ26fXg/2U4ZBCVKEUDQfmQ7ZRCUKEUAQfuR7ZRBUKIUAQTtR7ZTBkGJUgQQtB/ZThkEJUoRQNB+ZDtlEJQoRQBB+5HtlEFQohQBBO1HtlMGQYlSBBC0H9lOGQQlShFA0H5kO2UQlChFAEH7ke2UQVCiFAEE7Ue2UwZBiVIEELQf2U4ZBCVKESQJSmZMFvgJwSBoTyBoVGqIoDLPUi9BO0tD0AAIGpWCoGuT7ZRBUKLUAEFvXlWP31x9/kNVnRlXrz7/vqpe2rzzTYknzftffPPkXfPO4zdyCZ3VTrz7H+ffnlbPmt+fifVtewrw+/70QGbSatDTZyLLpxH09KWX8/PuvHl5+v7q9EzWp5fNpEhaq/KCinfvzp++v3nVvP1iF9IvZqtTUIMSpQYL2rhl0n42L+o3nTXZpFJ+8UZaWbtGgX5XGGx+IKgHBI1KDRbUXNv9F513XnztjGwFvJPtAd0S0LnpxSQE7QCCRqWyCurVoLXrGbmWgJkJQTuAoFGpQYKqC3qt885fWAG9NqixtikqBNVXe+0qBO0Agkalhgh6d16dmTrxoqq+/NrWkDrvvO61ixpU9uLlEqYXD0G7gaBRqSGCboSuCKfW736ynTIISpQigKD9yHbKIChRigCC9iPbKYOgRCkCCNqPbKcMghKlCCBoP7KdMghKlCKAoP3IdsogKFGKAIL2I9spg6BEKQII2o9spwyCEqUIIGg/sp0yCEqUIuAlKOuDjOiGk1nQ66PZw5/mhxA0BNENJq+gy73ni4c/XR9tztD19iOZkhTgHV1WQW9PDutG0Hrx4DsI6oPoBpNV0OujYynocnxBp+4CRQw4yslA0KhUmqCmBp03PxC091FOBoJGpdIE1W3Qxex4U35CUAEEjUolCip68bPZ3vON+QlBBRA0KpUq6MbpinBqHyMGHOVkIGhUigCCrmTAUU4GgkalCLov8ZvrIkFQCQSNSiUKupTNz8UGG6FdEU7tY8SAo5wMBI1KpQl6e6K677jNBEFzkfdG/S9V1Ykb9RA0FxupQReoQSFoJjK3QeUtetyo/zMEzUXmz+JnltVXeZ3yxv4Sz4ag3UDQqFSaoOkEBrayiK2kK8KpfYwYcJSTgaBRKQjalwFHORkIGpVKE7S5xO8nC6qziP2VyAUq8oTrlOEySbiXLlwVgaA+EDQqlSao6B/NZimP0ytBZR7G6szPE66ShLfShVdC0C3LUZ9wEMBG6brEJzmqBJWZbF+d+XnC7aSfLvwVatAA1KBRqR6CKkXvuVWvJLxw6b5d/mUjqEsXvpX5QQcc5WQgaFQqXdBlY+dxfXuy+l59WIOuEBQ1KAEEjUolCipuhCoz7/m0M2yDBt8BEgrq2qAQ1AJBo1Jpgl4fpT7H5Hrxn6gvTGh+vJThfn0qi0BQHwgalUoUdMDDIgnfKnsDQUMgaFSqn6Cp4+L1l3v0KdIV4dQ+Rgw4yslA0KhUiqBz90F8amaRC/nlHn2KdEU4tY8RA45yMhA0KpUiqKtBN0hXhFP7GDHgKCcDQaNSaYKOQFeEU/sYMeAoJwNBo1IEEHQlA45yMhA0KkUAQVcy4CgnA0GjUgQQdCUDjnIyEDQqRYBBcysZcJSTgaBRqX6CTpAfdGofIwYc5WQgaFQqRdAB90HzCcr6ICO64ezKfVDWBxnRDWdXOkmsDzKiG05eQW9PUsYcb0LQzA3IkhTgHV1eQeebMxOCOkqKLvPzoBv8hiQIaikpusyCbi7nDQR1lBRd5uRhicPiIehalBTdJpKHQdDo+OVdXUnRbSZ5GHrxreOXd3UlRbcr90Eh6HBYRwdBISjr6DILOtnXcUPQ4bCOLnMnabKv44agw2EdXebbTJN9HTcEHQ7r6LLfqN+Jr+MuSgHe0W2kBu38nqS3VdXO0+DnVSZmC8bPLFKUAryj20QbtPNbPm5UHqYuQanZEJSgpOjy9+JXfB138N0esaDUbAhKUFJ0Y94HvTqtqm8bAy+rqnpWi5fHIuGiSFDvz25eRbIb/dKUUtntxkwB3nvXAD8G3Kh3WUEvH78R9eLl0/c6QX1r9hP/5eIxatCAkqLL3Itf/TSTu4Y3duq8ySZtrZ0tftGt0eZFZljGJT6kpOgyP1G/qgXqp60VV++bV+LabhLV1n5e8LvzM/1yAUFjSoouextU5Kjv+rYk9/0d2jnz5TOoQXtRUnSb6CTdnnTcqNdVZNPifPv4jU5NGwmKNui9lBTdBDXo3XlVfXV+ZnvxLUFbvfjm5UvUoCElRZf5k6TVbdAMdEUIQYfDOrpRe/EQNA8lRYcHliEo6+jyCeqNOcbTTO3jl3d1JUWXWVDxPBMEjY9f3tWVFB0EhaCso4OgEJR1dBAUgrKODoJCUNbR7YqgrA8yohsOBCUpSQHe0eUU1H2JAgQNQXSD2ZVPklgfZEQ3nF0RNEfPyKMkBXhHB0EhKOvoICgEZR0dBIWgrKODoBCUdXQQFIKyjg6CQlDW0UFQCMo6OggKQVlHB0EhKOvoICgEZR0dBIWgrKPjJSiZvxaCtikpOl6COrpU7YoQgg6HdXQQFIKyjo6DoHfnZ/XV6Vl9+fR/Rfqw76vq5c0rnUH0ybv66otv3Hd/dEUIQYfDOjoOgtYXz+rLv3tZX7wU+e1OX5qsjELcC5EkXKZi3niO+nz7AziQUdCr37//9z/8Q+OjTm9r8jDqVLYvXPZF1KCCkqJjUYPevP63f/nT13/6+p0z06QKb670QXO0K0IIOhzW0bEQtH77bVOH/uuzuiWozWsLQQNKio6HoLIF2vx4gjbXddl5an25V1eEEHQ4rKPjIajswz/2G59359VZrfryELRNSdHxEDSdrggh6HBYRwdBISjr6CAoBGUdHQSFoKyjg6AQlHV0EBSCso4OgkJQ1tFBUAjKOjoICkFZRwdBISjr6HZFUNYHGdENB4KSlKQA7+ggKElJCvCOblcEzdsELUoB3tFBUAjKOjoICkFZRwdBISjr6CAoBGUdHQSFoKyjg6AQlHV0EBSCso4OgkJQ1tFBUAjKOjoICkFZRwdBISjr6CAoBGUdHU9Bw/zKN69d/sWuCCHocFhHx1PQEAjaoqToICgEZR0dJ0GJXPV1fVlVn0hBN50CPPvugGnZQA1K5Kq/eXVWXzxGDRpQUnScalAqV/3l0/e4xLcpKTpWghK56i8gaExJ0bESlMhVjxqUoKToeAka56pHG5SgpOh4CRrnqhffRfMlatCQkqLjJej9dEUIQYfDOjoICkFZRwdBISjr6CAoBGUdHQSFoKyjg6AQlHV0EBSCso4OgkJQ1tFBUAjKOrpdEZT1QUZ0w4GgJCUpwDs6CEpSkgK8o4OgJCUpwDu6XRE0V+9IU5ICvKODoBCUdXQQFIKyjg6CQlDW0UFQCMo6OggKQVlHB0EhKOvoICgEZR0dBIWgrKODoBCUdXQQFIKyjg6CQlDW0Y0vaJjee/W7EJSkpOi4CJpKV4QQdDiso4OgEJR1dFMI+kNVndU6OdjVF988+aP4UXnCmhki6XclMjCqFOA3r6onntFdEULQ4bCObgJBT5+J3N5G0FOVl15nWtQvl4/f6BTgIm+9SGK7wRz1A/cDMGewoC/89IryN5ftW3Pz+o1XbMMJbKnVlVRH8Y5umjaoJ6hJA6qyfcsCzZW+qUFNDVuJ3yCoT0nRMRJU16Ci6hQ1qJvv0xUhBB0O6+gmE1Tm9n7iCyrboC/eNA3P+q2tQeV3J3mSdkUIQYfDOrrJBK0vqurLr31BdS/+7ryqvpLfRCPfbHrx3hUeggpKig4fdUJQ1tFBUAjKOjoICkFZRwdBISjr6CAoBGUdHQSFoKyjg6AQlHV0EBSCso4OgkJQ1tFBUAjKOrpdEZT1QUZ0w4GgJCUpwDs6CEpSkgK8o4OgJCUpwDu6XRF07W5RSEkK8I4OgpKUpADv6CAoSUkK8I4OgpKUpADv6CAoSUkK8I4OgpKUpADv6CAoSUkK8I4OgpKUpADv6CAoSUkK8I4OgpKUpADv6CAoSUkK8I4OgpKUpADv6LgJ+rYK8tVCUIqSomMmqJ8KFIJ2UVJ0zAS9N4F9V4QQdDiso+MlqMhv961KXP9OJ6e/rPJnt7t/h0tSgHd0vATVKWtF0nqdnF5c8y9z56jfROSAG5sUVOWnFy1SkdXWp+tPCDXocFhHx7MG1dlsxcW9udJXnqNdEULQ4bCOjq+grrt0+SRzCvD7d7gkBXhHx1ZQnZxeXO0haIuSomMrqElOj158TEnRMRP0XroihKDDYR0dBCUpSQHe0UFQkpIU4B0dBCUpSQHe0UFQkpIU4B0dBCUpSQHe0UFQkpIU4B0dBCUpSQHe0UFQkpIU4B0dBCUpSQHe0e2KoKwPMqIbDgQlKUkB3tFBUJKSFOAdHQQlKUkB3tFBUJKSFOAd3bYJ2kXnaDoWILrBDA8OgqaD6AYDQccA0Q0Ggo4BohsMBB0DRDcYCDoGiG4wuyIoAC0gKGANBAWsgaCANRAUsIaRoHfnqxPbT4HIzvf0vQktfJkamVqIjIxBgDK4HEePkaBvn4l/vLhUAenQwpeJuXklzjMZ2fQBquByHD0+gooszPcmtx+bty/F/zq08GXiyC6qv1fJgePIpg9QBZfl6PERVCdjnjqMgLt/lvHo0MKXiUP7n/cm/2oU2fQBquCyHD0Iuoqb138r0kZyO/8KxoKas5nh6EHQVYjEuzdfv+N3/mVw3AXNcvQg6H2wPP8C9oIK1g6Oj6DTN+1pxJeUMOuDKMypZthJCgTdlU4Sg5sjESKv/tXv37O7iyORp5npbSYZXJajx0hQ/aV0rLhQ34qrQwtfpsZ8BwDLAGVwOY4eI0EBiIGggDUQFLAGggLWQFDAGggKWANBfW5PHnwnXucPfyLnfzg4vn8li9nsMHF710fHrd8P7fvNT3t2XS/3nt+/pnui7FwHSyCoz+3JbF+8riOokSyFLkH1vB6C9gCCbi+3Jx89EmdvPUETatmOshA0AoL63J7sL0QV2ggq5Wj++3Dwm6Pmmv3hYDY7bgT99YG+gDcXcjFx/ctPZ6pZUC/lO6KgfOPDo89aZU0RN0tuxM7Vgi5mh/4l3s5uJvY+NXItW5tXS4hQRZTHJno9n17HVgBBfRpB5akNBG3O50Ke5QffyV8+HAiL9MT1kalslzOhyL6tFRtTj+WbtqwtYmeJsnZurQRd6Pe1oHb2vAlhOdNyuY3pzaslRKh7z31B5Xx6HdsBBPVpBK0XzSkNBBVVnvpP/SJMVdfipZmQi8p39p47QWVZsSZd1hbxZh3buWKZ5heptBPUzlati7mSy9uYrXuPVf0ro/QEPTQNh/Y6tgQI6iMEFSc/EPRYtz3Vqa+lGKodZ0yoa9M89d6Jy9oidlZT1s4Vy1wf/Vxeip2gdrZSWLcfo42ZJUzITtBjs1B7HVsCBPURgoqqplNQ2YVq/hdNQEFbUK9no8oKQU1ZW8TOEgaaubWct/eZmOcJamYvYkH9btRKQcl1bAkQ1EcKWs8PE2vQ2uuHxzWoFdSUdTWoL6ivi7gYizsI7Rq0No2ANWrQ9jq2BAjqowT98Ohj3XI0TjpBXeNRLWEnOtqgc69sqw06121Q71aS2KjYlt8GDf4AFlEbtEvQQycwvY4tAYL6KEHr+ezhT7cn4mfWFrQ5ubZnLrobzq+4F98u6/Xi7S/Hbm6tuzNz0fUKevFy9kIuE/XiaUFN9Go+vY7tAIL6aEHlzZnro9nsN9El/tcHurkobi02V0yvAjS3Jq2g7bLuPqiZZW906luputO9374PKmeT90E7BDXR6/n0OrYCCLopVnzqlPSR/ka2vH1A0E0xoaCPtqmKvAcIuikmE3SuHnjZESAoYA0EBayBoIA1EBSwBoIC1kBQwBoIClgDQQFrIChgDQQFrIGggDX/D2oblriNcmtEAAAAAElFTkSuQmCC" /></p>
+<p><img src="data:image/png;base64,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" /></p>
 <p>Damage to property and agriculture is more significant from floods and hurricanes.</p>
 <pre class="r"><code># Scale damages to thousands to billions
 greenplot&lt;-ggplot(data=costly10,
@@ -1238,13 +609,7 @@ greenplot&lt;-ggplot(data=costly10,
         ylab(&quot;Economic damage, $US billion&quot;)+
         xlab(&quot;Event type&quot;)
 print(greenplot)</code></pre>
-<p><img src="data:image/png;base64,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" /></p>
-<!--
-## To do
-- Check and handle NAs
-- Do a geo check
-- Should I treat outliers? Do they and regular events need different policies?
--->
+<p><img src="data:image/png;base64,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" /></p>
 </div>
 
 
