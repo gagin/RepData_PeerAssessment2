@@ -1,4 +1,4 @@
-# Tornado hit people, floods hurt economics
+# Tornadoes hit people, floods hurt economics
 Alex Gaggin  
 Friday, August 14, 2015  
 
@@ -11,7 +11,8 @@ assessing, in particular, human and dollar damages. The data
 in the dataset was available for years 1950-2011, but for consistency reasons
 a shorter time period was analyzed - 1996-2010. The conclusion appears valid for
 longer period as well: tornadoes were the threat to human life and health even
-before unusually deadly outbreak of 2011.
+before unusually deadly outbreak of 2011. Excessive heat is the next overall
+hazardous event, and the biggest killer.
 From economic damages point of view, tornadoes were not as bad
 as floods and hurricanes.
 
@@ -24,6 +25,7 @@ library(digest)
 library(dplyr)
 library(lubridate)
 library(ggplot2)
+library(tidyr)
 ```
 
 The data, originally prepared for download by authors of Reproducible Research
@@ -664,8 +666,6 @@ deadly10<-tapply(framed$Affected,framed$type,sum) %>%
         data.frame
 names(deadly10)<-'Affected'
 deadly10$Event<-rownames(deadly10)
-# Order it to prevent gplot from re-sorting bar alphabetically
-deadly10$Event<-factor(deadly10$Event, levels=rev(deadly10$Event))
 print(deadly10, row.names=FALSE)
 ```
 
@@ -684,6 +684,21 @@ print(deadly10, row.names=FALSE)
 ```
 
 ```r
+# Group to display fatalities and injuries separately
+hazard.grouped <- framed %>%
+        gather(Impact, hazard.value, Fatalities, Injuries) %>%
+        group_by(type,Impact) %>%
+        summarize(Impacted=sum(hazard.value))%>%
+        filter(type %in% deadly10$Event)
+
+sorted.by.fatalities<-hazard.grouped[hazard.grouped$Impact=='Fatalities',] %>%
+        ungroup() %>%
+        arrange(desc(Impacted))
+
+hazard.grouped$type<-factor(hazard.grouped$type,
+                            levels=rev(sorted.by.fatalities$type))
+
+# Economic damage
 costly10<-tapply(framed$cost,framed$type,sum) %>%
         sort(decr=TRUE) %>%
         head(10) %>%
@@ -712,22 +727,27 @@ It was decided to operate 1996-2010 year range to draw general conclusions,
 as dropping 2011 didn't change the event type comparison picture - Tornado
 was still the biggest hazard to people, even before 2011 outbreak.
 
+It was also decided to keep top 10 events, affecting population health in sum
+of fatalities and injuries, but sort them on the following charts by fatalities.
+
 ## Results
 
 Tornadoes, supposedly as a result of their rapid nature, are the biggest
-cause of human life loss and injuries. They are far ahead even without
-significant outbreak in 2011.
+cause of human life loss and injuries in total. They are far ahead even without
+significant outbreak in 2011. Although the deadliest
+force is actually excessive heat. 
 
 
 ```r
-redplot<-ggplot(data=deadly10,
-          aes(x=Event,y=Affected)
-          )+
-        geom_bar(stat='identity',fill='red')+
+# Faceted chart doesn't look better - if scale is common, and it makes
+# sense to have it common, then part with fatalities has lot of empty space
+redplot<-ggplot(hazard.grouped,
+                aes(x=type,y=Impacted,fill=Impact))+
+        geom_bar(stat="identity")+
         coord_flip()+
         ggtitle("Top 10 types of weather events that caused\n biggest loss of human life and health in 1996-2010")+
         ylab("Number of people killed or injured")+
-        xlab("Event type")
+        xlab("Weather event")
 print(redplot)
 ```
 
@@ -747,8 +767,9 @@ greenplot<-ggplot(data=costly10,
         coord_flip()+
         ggtitle("Top 10 types of weather events that caused\n most damage to property and crops in 1996-2010")+
         ylab("Economic damage, $US billion")+
-        xlab("Event type")
+        xlab("Weather event")
 print(greenplot)
 ```
 
 ![](storm_files/figure-html/unnamed-chunk-18-1.png) 
+
